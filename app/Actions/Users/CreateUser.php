@@ -2,6 +2,8 @@
 
 namespace App\Actions\Users;
 
+use App\Actions\Audit\RecordAudit;
+use App\Enums\AuditAction;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +11,8 @@ use Illuminate\Support\Str;
 
 class CreateUser
 {
+    public function __construct(private RecordAudit $recordAudit) {}
+
     public function handle(string $name, string $email, string $password, bool $isOwner, bool $canManageCards, bool $mustChangePassword): User
     {
         return DB::transaction(function () use ($name, $email, $password, $isOwner, $canManageCards, $mustChangePassword): User {
@@ -25,6 +29,12 @@ class CreateUser
                 'can_manage_cards' => $canManageCards,
                 'must_change_password' => $mustChangePassword,
             ])->save();
+
+            $this->recordAudit->handle(
+                AuditAction::UserCreated,
+                "Usuario creado: {$user->name} ({$user->email}), tipo {$user->typeLabel()}",
+                $user,
+            );
 
             return $user;
         }, 3);

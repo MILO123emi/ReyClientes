@@ -3,14 +3,13 @@
 namespace Database\Seeders;
 
 use App\Actions\Users\CreateUser;
+use App\Models\AuthorizedPerson;
+use App\Models\Client;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
@@ -28,6 +27,16 @@ class DatabaseSeeder extends Seeder
             if (! User::query()->where('email', $email)->exists()) {
                 $createUser->handle($name, $email, 'password', $isOwner, $canManageCards, mustChangePassword: false);
             }
+        }
+
+        if (Client::query()->count() === 0) {
+            $owner = User::query()->where('is_owner', true)->sole();
+
+            Client::factory()->count(15)->create(['created_by' => $owner->id])
+                ->each(function (Client $client) use ($owner): void {
+                    AuthorizedPerson::factory()->count(random_int(0, 4))->for($client)
+                        ->create(['created_by' => $owner->id]);
+                });
         }
     }
 }

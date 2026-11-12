@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->isOwner() || $this->can_manage_cards;
     }
+
+    public function typeLabel(): string
+    {
+        return $this->isOwner() ? 'Principal' : ($this->canManageCards() ? 'Gestión' : 'Consulta');
+    }
 }

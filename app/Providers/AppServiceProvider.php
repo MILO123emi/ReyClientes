@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\AuthorizedPerson;
+use App\Models\Client;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -26,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        Relation::enforceMorphMap(['client' => Client::class, 'person' => AuthorizedPerson::class, 'user' => User::class]);
         Gate::define('manage-cards', fn (User $user): bool => $user->canManageCards());
         Gate::define('view-audit', fn (User $user): bool => $user->isOwner());
     }
