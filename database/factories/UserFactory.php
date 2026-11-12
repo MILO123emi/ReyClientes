@@ -26,10 +26,14 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'email' => fake()->unique()->userName().'@example.com',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'is_owner' => false,
+            'can_manage_cards' => false,
+            'must_change_password' => false,
+            'last_login_at' => null,
         ];
     }
 
@@ -41,5 +45,20 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function owner(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_owner' => true]);
+    }
+
+    public function manager(): static
+    {
+        return $this->state(fn (array $attributes) => ['can_manage_cards' => true]);
+    }
+
+    public function mustChangePassword(): static
+    {
+        return $this->state(fn (array $attributes) => ['must_change_password' => true]);
     }
 }

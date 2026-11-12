@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -36,11 +38,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user() ? (new UserResource($request->user()))->resolve($request) : null,
+                'user' => $user ? [
+                    ...(new UserResource($user))->resolve($request),
+                    'can' => [
+                        'manageCards' => Gate::allows('manage-cards'),
+                        'manageUsers' => $user->can('viewAny', User::class),
+                        'viewAudit' => Gate::allows('view-audit'),
+                    ],
+                ] : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
