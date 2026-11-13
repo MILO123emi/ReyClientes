@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
+import { request as recover } from '@/routes/recovery';
 
 defineOptions({
     layout: {
@@ -55,8 +56,13 @@ defineProps<{
             </div>
 
             <div class="grid gap-2">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <Label for="password">Contraseña</Label>
+                    <Link
+                        :href="recover()"
+                        class="inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4"
+                        >¿Olvidaste tu contraseña?</Link
+                    >
                 </div>
                 <PasswordInput
                     id="password"

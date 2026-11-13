@@ -2,17 +2,20 @@
 
 namespace Database\Factories;
 
+use App\Enums\PhotoOwner;
 use App\Enums\Relationship;
 use App\Models\AuthorizedPerson;
 use App\Models\Client;
+use App\Services\IdPhotoService;
 use Database\Factories\Concerns\FakesHonduranData;
+use Database\Factories\Concerns\MakesPlaceholderIdPhotos;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /** @extends Factory<AuthorizedPerson> */
 class AuthorizedPersonFactory extends Factory
 {
-    use FakesHonduranData;
+    use FakesHonduranData, MakesPlaceholderIdPhotos;
 
     /** @return array<string, mixed> */
     public function definition(): array
@@ -25,8 +28,8 @@ class AuthorizedPersonFactory extends Factory
             'full_name' => $this->fakeFullName(),
             'dni' => $this->fakeDni(),
             'phone' => $this->fakePhone(),
-            'id_photo_path' => "id-photos/people/{$uuid}.jpg",
-            'id_photo_thumb_path' => "id-photos/people/{$uuid}_thumb.jpg",
+            'id_photo_path' => "id-photos/people/{$uuid}.enc",
+            'id_photo_thumb_path' => "id-photos/people/{$uuid}_thumb.enc",
             'relationship' => $relationship,
             'relationship_other' => $relationship === Relationship::Other ? fake()->randomElement(['Cuñada', 'Vecino', 'Suegra', 'Ahijado']) : null,
         ];
@@ -38,5 +41,10 @@ class AuthorizedPersonFactory extends Factory
             'relationship' => Relationship::Other,
             'relationship_other' => fake()->randomElement(['Cuñada', 'Vecino', 'Suegra', 'Ahijado']),
         ]);
+    }
+
+    public function withIdPhoto(): static
+    {
+        return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->placeholderIdPhoto(), PhotoOwner::Person));
     }
 }

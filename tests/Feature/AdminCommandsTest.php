@@ -51,7 +51,7 @@ it('normalizes the email before creation, login and password reset', function ()
     expect($user->email)->toBe('ana@example.com');
 
     $this->post(route('login.store'), ['email' => 'Ana@Example.com', 'password' => 'abcdefgh'])
-        ->assertSessionHasNoErrors()->assertRedirect(route('dashboard', absolute: false));
+        ->assertSessionHasNoErrors()->assertRedirect(route('clients.index', absolute: false));
     $this->assertAuthenticatedAs($user);
 
     $this->artisan('admin:reset-password', ['email' => 'Ana@Example.com'])

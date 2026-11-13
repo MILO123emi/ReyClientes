@@ -1,10 +1,21 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\AuthorizedPersonController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ForcedPasswordChangeController;
+use App\Http\Controllers\IdPhotoController;
+use App\Http\Controllers\OwnerPasswordResetController;
+use App\Http\Controllers\UserController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 Route::middleware('guest')->group(function () {
+    Route::get('recuperar', [OwnerPasswordResetController::class, 'request'])->name('recovery.request');
+    Route::post('recuperar', [OwnerPasswordResetController::class, 'send'])->middleware('throttle:recovery-send')->name('recovery.send');
+    Route::get('recuperar/codigo', [OwnerPasswordResetController::class, 'showVerify'])->name('recovery.verify');
+    Route::post('recuperar/codigo', [OwnerPasswordResetController::class, 'verify'])->middleware('throttle:recovery-verify')->name('recovery.verify.store');
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login')
@@ -12,8 +23,24 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', fn () => to_route('dashboard'))->name('home');
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::middleware('can:viewAny,'.User::class)->group(function () {
+        Route::get('usuarios', [UserController::class, 'index'])->name('users.index');
+        Route::post('usuarios', [UserController::class, 'store'])->name('users.store');
+        Route::put('usuarios/{user}/permiso', [UserController::class, 'updatePermission'])->name('users.permission');
+        Route::put('usuarios/{user}/contrasena', [UserController::class, 'setPassword'])->name('users.password');
+        Route::delete('usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+    Route::get('auditoria', [AuditLogController::class, 'index'])->middleware('can:view-audit')->name('audit.index');
+    Route::get('media/{type}/{id}/{variant}', [IdPhotoController::class, 'show'])->whereNumber('id')->name('media.show');
+    Route::get('/', fn () => to_route('clients.index'))->name('home');
+    Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
+    Route::post('clientes', [ClientController::class, 'store'])->name('clients.store');
+    Route::post('clientes/buscar', [ClientController::class, 'search'])->middleware('throttle:30,1')->name('clients.search');
+    Route::put('clientes/{client}', [ClientController::class, 'update'])->name('clients.update');
+    Route::delete('clientes/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+    Route::post('clientes/{client}/autorizados', [AuthorizedPersonController::class, 'store'])->name('people.store');
+    Route::put('autorizados/{person}', [AuthorizedPersonController::class, 'update'])->name('people.update');
+    Route::delete('autorizados/{person}', [AuthorizedPersonController::class, 'destroy'])->name('people.destroy');
     Route::redirect('settings/password', '/cambiar-contrasena');
     Route::get('cambiar-contrasena', [ForcedPasswordChangeController::class, 'edit'])->name('password.change');
     Route::put('cambiar-contrasena', [ForcedPasswordChangeController::class, 'update'])

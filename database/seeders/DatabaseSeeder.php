@@ -32,9 +32,9 @@ class DatabaseSeeder extends Seeder
         if (Client::query()->count() === 0) {
             $owner = User::query()->where('is_owner', true)->sole();
 
-            Client::factory()->count(15)->create(['created_by' => $owner->id])
+            Client::factory()->withIdPhoto()->count(15)->create(['created_by' => $owner->id])
                 ->each(function (Client $client) use ($owner): void {
-                    AuthorizedPerson::factory()->count(random_int(0, 4))->for($client)
+                    AuthorizedPerson::factory()->withIdPhoto()->count(random_int(0, 4))->for($client)
                         ->create(['created_by' => $owner->id]);
                 });
         }

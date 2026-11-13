@@ -26,6 +26,6 @@ class ForcedPasswordChangeController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Contraseña actualizada']);
 
-        return to_route('dashboard');
+        return to_route('clients.index');
     }
 }

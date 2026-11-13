@@ -6,6 +6,7 @@ use App\Actions\Audit\RecordAudit;
 use App\Enums\AuditAction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SetUserPassword
 {
@@ -17,6 +18,7 @@ class SetUserPassword
             $user->forceFill([
                 'password' => $password,
                 'must_change_password' => $mustChange,
+                'remember_token' => Str::random(60),
             ])->save();
 
             DB::table('sessions')->where('user_id', $user->id)->delete();

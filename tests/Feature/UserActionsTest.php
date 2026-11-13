@@ -4,6 +4,7 @@ use App\Actions\Users\CreateUser;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 it('normalizes emails and assigns protected flags through the action', function () {
     $user = app(CreateUser::class)->handle('Usuario de Prueba', ' Manager@Example.com ', 'abcdefgh', false, true, true);
@@ -60,6 +61,7 @@ it('does not update the last login after an unsuccessful login', function () {
 });
 
 it('seeds exactly the three fictional local accounts without forcing a password change', function () {
+    Storage::fake('local');
     $this->app->detectEnvironment(fn () => 'local');
 
     $this->seed();
@@ -75,6 +77,7 @@ it('seeds exactly the three fictional local accounts without forcing a password 
 });
 
 it('never seeds default users outside the local environment', function (string $environment) {
+    Storage::fake('local');
     $this->app->detectEnvironment(fn () => $environment);
 
     $this->seed();

@@ -13,7 +13,7 @@ it('redirects users with temporary passwords until they change them', function (
     $user = User::factory()->mustChangePassword()->create();
 
     $this->actingAs($user)->get($uri)->assertRedirect(route('password.change'));
-})->with(['/dashboard', '/', '/settings/password']);
+})->with(['/clientes', '/', '/settings/password']);
 
 it('allows temporary-password users to view the notice and logout', function () {
     $user = User::factory()->mustChangePassword()->create();
@@ -29,14 +29,14 @@ it('shows the same password form for users without a temporary password', functi
         ->assertInertia(fn (Assert $page) => $page->component('auth/ChangePassword')->where('mustChange', false));
 });
 
-it('updates an eight-character password, clears the flag and grants access to the dashboard', function () {
+it('updates an eight-character password, clears the flag and grants access to the clients page', function () {
     $user = User::factory()->mustChangePassword()->create();
     $oldHash = $user->password;
 
     $this->actingAs($user)->put(route('password.change.update'), [
         'current_password' => 'password', 'password' => 'abcdefgh', 'password_confirmation' => 'abcdefgh',
         'name' => 'Nombre no autorizado', 'email' => 'unwanted@example.com', 'is_owner' => true,
-    ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('clients.index'));
 
     expect($user->refresh()->must_change_password)->toBeFalse()
         ->and($user->password)->not->toBe($oldHash)
@@ -44,7 +44,7 @@ it('updates an eight-character password, clears the flag and grants access to th
         ->and($user->isOwner())->toBeFalse();
     $this->assertDatabaseMissing('users', ['id' => $user->id, 'email' => 'unwanted@example.com']);
     $this->assertDatabaseMissing('users', ['id' => $user->id, 'name' => 'Nombre no autorizado']);
-    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('clients.index'))->assertOk();
 });
 
 it('leaves the password and temporary flag unchanged when validation fails', function (array $overrides, string $field) {
@@ -68,7 +68,7 @@ it('permits reusing the current password even when the change is forced', functi
 
     $this->actingAs($user)->put(route('password.change.update'), [
         'current_password' => 'password', 'password' => 'password', 'password_confirmation' => 'password',
-    ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('clients.index'));
 
     expect($user->refresh()->must_change_password)->toBeFalse()
         ->and(Hash::check('password', $user->password))->toBeTrue();
@@ -82,7 +82,7 @@ it('uses the same eight-character minimum in production without external checks'
     $this->withSession(['_token' => 'test-token'])->actingAs($user)->put(route('password.change.update'), [
         '_token' => 'test-token',
         'current_password' => 'password', 'password' => 'abcdefgh', 'password_confirmation' => 'abcdefgh',
-    ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('clients.index'));
 
     expect(Hash::check('abcdefgh', $user->refresh()->password))->toBeTrue();
 });

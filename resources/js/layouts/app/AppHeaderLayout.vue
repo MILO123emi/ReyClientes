@@ -1,25 +1,17 @@
 <script setup lang="ts">
-import AppContent from '@/components/AppContent.vue';
 import AppHeader from '@/components/AppHeader.vue';
-import AppShell from '@/components/AppShell.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
-type Props = {
-    breadcrumbs?: BreadcrumbItem[];
-};
-
-withDefaults(defineProps<Props>(), {
-    breadcrumbs: () => [],
-});
+defineProps<{ breadcrumbs?: BreadcrumbItem[] }>();
 </script>
 
 <template>
-    <AppShell variant="header">
-        <AppHeader :breadcrumbs="breadcrumbs" />
-        <AppContent variant="header">
+    <div class="flex min-h-screen flex-col bg-slate-50">
+        <AppHeader />
+        <main class="mx-auto flex w-full max-w-7xl flex-1 flex-col p-4 sm:p-6">
             <slot />
-        </AppContent>
+        </main>
         <Toaster />
-    </AppShell>
+    </div>
 </template>

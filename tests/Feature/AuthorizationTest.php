@@ -36,7 +36,7 @@ it('shares only the required identity and permissions for each role', function (
         default => User::factory()->create(),
     };
 
-    $this->actingAs($user)->get(route('dashboard'))->assertOk()
+    $this->actingAs($user)->get(route('clients.index'))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('auth.user', [
             'id' => $user->id,
             'name' => $user->name,

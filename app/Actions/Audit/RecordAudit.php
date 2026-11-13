@@ -17,7 +17,9 @@ class RecordAudit
             throw new InvalidArgumentException('La descripción de auditoría no puede incluir una identidad completa.');
         }
 
-        $actor ??= auth()->user();
+        if (func_num_args() < 4) {
+            $actor ??= auth()->user();
+        }
         $log = new AuditLog;
         $log->forceFill([
             'user_id' => $actor?->id,
