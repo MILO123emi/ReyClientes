@@ -35,9 +35,8 @@ function mutationEndpoint(string $operation, Client $client, AuthorizedPerson $p
         'person-delete' => ['DELETE', route('people.destroy', $person), [], 'person.deleted'],
         'user-create' => ['POST', route('users.store'), [
             'name' => 'Usuario De Prueba', 'email' => 'newuser@example.com', 'password' => 'temporary-password',
-            'password_confirmation' => 'temporary-password', 'can_manage_cards' => false,
+            'password_confirmation' => 'temporary-password',
         ], 'user.created'],
-        'user-permission' => ['PUT', route('users.permission', $target), ['can_manage_cards' => true], 'user.permission_changed'],
         'user-password' => ['PUT', route('users.password', $target), [
             'password' => 'temporary-password', 'password_confirmation' => 'temporary-password',
         ], 'user.password_set_by_owner'],
@@ -47,7 +46,7 @@ function mutationEndpoint(string $operation, Client $client, AuthorizedPerson $p
 
 dataset('all protected mutations', [
     'client-create', 'client-update', 'client-delete', 'person-create', 'person-update', 'person-delete',
-    'user-create', 'user-permission', 'user-password', 'user-delete',
+    'user-create', 'user-password', 'user-delete',
 ]);
 
 it('requires confirmation on every mutation and audits successful changes or incorrect confirmations', function (string $operation, string $passwordState) {
@@ -85,7 +84,6 @@ it('enforces the full role matrix for every protected mutation', function (strin
     Storage::fake('local');
     $actor = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     $target = User::factory()->create();
@@ -95,7 +93,7 @@ it('enforces the full role matrix for every protected mutation', function (strin
     $payload['current_password'] = 'password';
     $before = mutationDatabaseState();
     $files = Storage::disk('local')->allFiles();
-    $allowed = str_starts_with($operation, 'user-') ? $role === 'owner' : $role !== 'reader';
+    $allowed = str_starts_with($operation, 'user-') ? $role === 'owner' : $role === 'owner';
 
     $response = $this->actingAs($actor)->call($method, $uri, $payload);
 
@@ -109,7 +107,7 @@ it('enforces the full role matrix for every protected mutation', function (strin
         expect(Storage::disk('local')->allFiles())->toBe($files);
         $this->assertDatabaseCount('audit_logs', 0);
     }
-})->with('all protected mutations')->with(['reader', 'manager', 'owner']);
+})->with('all protected mutations')->with(['employee', 'owner']);
 
 it('requires authentication at every mutation endpoint', function (string $operation) {
     Storage::fake('local');

@@ -10,7 +10,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 it('enforces the role matrix for clients users and audit pages', function (string $role, string $route) {
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
 
@@ -21,7 +20,7 @@ it('enforces the role matrix for clients users and audit pages', function (strin
     } else {
         $response->assertForbidden();
     }
-})->with(['reader', 'manager', 'owner'])->with(['clients.index', 'users.index', 'audit.index']);
+})->with(['employee', 'owner'])->with(['clients.index', 'users.index', 'audit.index']);
 
 it('requires authentication for administration pages', function (string $route) {
     $this->get(route($route))->assertRedirect(route('login'));
@@ -38,7 +37,7 @@ it('lists fifty audit records per page newest first with safe labeled resource f
         ->assertInertia(fn (Assert $page) => $page->component('audit/Index')->has('logs.data', 50)
             ->where('logs.meta.per_page', 50)->where('logs.meta.last_page', 2)
             ->where('logs.data.0.description', 'Registro de prueba 50')->where('logs.data.0.user', 'Principal De Prueba')
-            ->where('logs.data.0.action_label', 'Cliente creado')->has('actions', 16));
+            ->where('logs.data.0.action_label', 'Cliente creado')->has('actions', 18));
 
     expect($response->inertiaProps('logs.data.0'))->toHaveKeys([
         'created_at', 'user', 'action_label', 'description', 'ip_address',
@@ -135,3 +134,13 @@ it('masks full identity sequences embedded in login email addresses', function (
     expect(AuditLog::query()->sole()->description)->toContain('****-****-*2345@example.com')
         ->not->toContain('0801199012345', '0801-1990-12345', 'password');
 })->with([true, false]);
+
+it('keeps historic permission events readable after removing the permission', function () {
+    $owner = User::factory()->owner()->create();
+    AuditLog::query()->forceCreate([
+        'user_id' => $owner->id, 'action' => 'user.permission_changed',
+        'description' => 'Permiso anterior de prueba', 'created_at' => now(),
+    ]);
+    $this->actingAs($owner)->get(route('audit.index'))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('logs.data.0.action_label', 'Permiso cambiado'));
+});

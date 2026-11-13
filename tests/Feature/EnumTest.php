@@ -27,8 +27,10 @@ it('labels every specified audit event in Spanish', function () {
     expect($labels)->toBe([
         'client.created' => 'Cliente creado', 'client.updated' => 'Cliente editado', 'client.deleted' => 'Cliente eliminado',
         'person.created' => 'Persona autorizada agregada', 'person.updated' => 'Persona autorizada editada', 'person.deleted' => 'Persona autorizada eliminada',
-        'user.created' => 'Usuario creado', 'user.deleted' => 'Usuario eliminado', 'user.permission_changed' => 'Permiso cambiado',
-        'user.password_set_by_owner' => 'Contraseña asignada', 'auth.login' => 'Inicio de sesión',
+        'user.created' => 'Usuario creado', 'user.deleted' => 'Usuario eliminado',
+        'user.password_set_by_owner' => 'Contraseña asignada',
+        'user.email_change_requested' => 'Código de cambio de correo enviado', 'user.email_change_failed' => 'Código de cambio de correo incorrecto',
+        'user.email_changed' => 'Correo cambiado', 'auth.login' => 'Inicio de sesión',
         'auth.login_failed' => 'Inicio de sesión fallido', 'auth.confirm_failed' => 'Confirmación de contraseña fallida',
         'auth.reset_code_sent' => 'Código de recuperación enviado', 'auth.reset_code_failed' => 'Código de recuperación incorrecto',
         'auth.password_reset' => 'Contraseña recuperada',

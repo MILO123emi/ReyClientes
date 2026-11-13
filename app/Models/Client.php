@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasDni;
+use App\Models\Concerns\HasSearchName;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,6 +16,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property string $search_name
  * @property string $full_name
  * @property string $dni
  * @property string $dni_hash
@@ -30,11 +32,11 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, AuthorizedPerson> $authorizedPeople
  */
 #[Fillable(['full_name', 'dni', 'phone', 'id_photo_path', 'id_photo_thumb_path'])]
-#[Hidden(['dni', 'dni_hash', 'id_photo_path', 'id_photo_thumb_path'])]
+#[Hidden(['search_name', 'dni', 'dni_hash', 'id_photo_path', 'id_photo_thumb_path'])]
 class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */
-    use HasDni, HasFactory;
+    use HasDni, HasFactory, HasSearchName;
 
     /** @return array<string, string> */
     protected function casts(): array

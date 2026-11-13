@@ -12,6 +12,6 @@ class ManagedUserResource extends JsonResource
     /** @return array<string,mixed> */
     public function toArray(Request $request): array
     {
-        return ['id' => $this->id, 'name' => $this->name, 'email' => $this->email, 'type' => $this->typeLabel(), 'is_owner' => $this->is_owner, 'can_manage_cards' => $this->can_manage_cards, 'last_login_at' => $this->last_login_at?->toIso8601String()];
+        return ['id' => $this->id, 'name' => $this->name, 'email' => $this->email, 'type' => $this->typeLabel(), 'is_owner' => $this->is_owner, 'last_login_at' => $this->last_login_at?->toIso8601String()];
     }
 }

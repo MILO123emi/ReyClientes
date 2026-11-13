@@ -29,7 +29,6 @@ it('redirects guests from the clients index to login', function () {
 it('lists twenty clients per page for every role with only safe resource fields', function (string $role) {
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     Client::factory()->count(21)->create();
@@ -52,11 +51,11 @@ it('lists twenty clients per page for every role with only safe resource fields'
     ])->toHaveCount(9);
     $this->get(route('clients.index', ['page' => 2]))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->has('clients.data', 1)->where('clients.meta.current_page', 2));
-})->with(['reader', 'manager', 'owner']);
+})->with(['employee', 'owner']);
 
 it('creates normalized clients with encrypted identity photos attribution and masked audit', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->from(route('clients.index'))->post(route('clients.store'), clientEndpointPayload([
         'created_by' => 999, 'updated_by' => 999, 'dni_hash' => 'forged',
@@ -82,7 +81,7 @@ it('creates normalized clients with encrypted identity photos attribution and ma
 
 it('requires every client field without writing files rows or audit', function (string $field) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $payload = clientEndpointPayload();
     unset($payload[$field]);
 
@@ -96,7 +95,7 @@ it('requires every client field without writing files rows or audit', function (
 it('rejects invalid client fields with the specified Spanish validation message', function (string $kind, string $field, string $message) {
     Storage::fake('local');
     $this->travelTo(now()->startOfDay());
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $value = match ($kind) {
         'short-dni' => '080119901234',
         'zero-department' => '0001199012345',
@@ -131,7 +130,7 @@ it('rejects invalid client fields with the specified Spanish validation message'
 
 it('rejects duplicate client identities before writing any photos', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     Client::factory()->create(['dni' => '0801199012345']);
 
     $this->actingAs($user)->post(route('clients.store'), clientEndpointPayload())
@@ -144,7 +143,7 @@ it('rejects duplicate client identities before writing any photos', function () 
 
 it('allows editing with the clients own identity and preserves existing photos', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create(['dni' => '0801199012345']);
     $paths = [$client->id_photo_path, $client->id_photo_thumb_path];
 
@@ -160,7 +159,7 @@ it('allows editing with the clients own identity and preserves existing photos',
 
 it('rejects a client identity already assigned to one of its authorized people', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $original = $client->dni;
     AuthorizedPerson::factory()->for($client)->create(['dni' => '0801199012345']);
@@ -174,7 +173,7 @@ it('rejects a client identity already assigned to one of its authorized people',
 
 it('replaces client photos and deletes the old files after commit', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create();
     $oldPaths = [$client->id_photo_path, $client->id_photo_thumb_path];
 
@@ -192,7 +191,7 @@ it('replaces client photos and deletes the old files after commit', function () 
 it('does not write or audit an unchanged client', function () {
     Storage::fake('local');
     $this->travelTo(now()->startOfSecond());
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create(['full_name' => 'Ana De Prueba']);
     $updatedAt = $client->updated_at->toISOString();
     $this->travel(60)->seconds();
@@ -208,7 +207,7 @@ it('does not write or audit an unchanged client', function () {
 
 it('restores old client data and photos when audit fails during replacement', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create();
     $original = DB::table('clients')->where('id', $client->id)->first();
     $files = Storage::disk('local')->allFiles();
@@ -225,7 +224,7 @@ it('restores old client data and photos when audit fails during replacement', fu
 
 it('removes newly stored photos if client creation rolls back', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $this->mock(RecordAudit::class)->shouldReceive('handle')->once()->andThrow(new RuntimeException('Fallo de auditoría de prueba.'));
     Exceptions::fake();
 
@@ -239,7 +238,7 @@ it('removes newly stored photos if client creation rolls back', function () {
 
 it('deletes clients their authorized people and all photos with a masked counted audit', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create(['full_name' => 'Ana De Prueba', 'dni' => '0801199012345']);
     AuthorizedPerson::factory()->count(2)->for($client)->withIdPhoto()->create();
     $other = Client::factory()->withIdPhoto()->create();
@@ -263,7 +262,6 @@ it('enforces client mutation permissions for every role and endpoint', function 
     Storage::fake('local');
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     $client = Client::factory()->withIdPhoto()->create();
@@ -278,7 +276,7 @@ it('enforces client mutation permissions for every role and endpoint', function 
 
     $response = $this->actingAs($user)->call($method, $uri, $payload);
 
-    if ($role === 'reader') {
+    if ($role === 'employee') {
         $response->assertForbidden();
         expect(DB::table('clients')->get()->toArray())->toEqual($before);
         expect(Storage::disk('local')->allFiles())->toBe($files);
@@ -289,11 +287,11 @@ it('enforces client mutation permissions for every role and endpoint', function 
             'create' => 'created', 'update' => 'updated', 'delete' => 'deleted',
         });
     }
-})->with(['reader', 'manager', 'owner'])->with(['create', 'update', 'delete']);
+})->with(['employee', 'owner'])->with(['create', 'update', 'delete']);
 
 it('rejects missing and incorrect passwords without changing clients or photos', function (string $operation, string $passwordState) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create();
     $before = DB::table('clients')->get()->toArray();
     $files = Storage::disk('local')->allFiles();
@@ -320,10 +318,10 @@ it('rejects missing and incorrect passwords without changing clients or photos',
 
 it('revokes client mutation permission on the next request in the same session', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password']);
-    User::query()->whereKey($user->id)->update(['can_manage_cards' => false]);
+    User::query()->whereKey($user->id)->update(['is_owner' => false]);
     $this->app['auth']->forgetGuards();
 
     $this->put(route('clients.update', $client), clientEndpointPayload(['id_photo' => null]))->assertForbidden();

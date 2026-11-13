@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthorizedPersonController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ForcedPasswordChangeController;
 use App\Http\Controllers\IdPhotoController;
+use App\Http\Controllers\OwnerEmailController;
 use App\Http\Controllers\OwnerPasswordResetController;
 use App\Http\Controllers\UserController;
 use App\Models\User;
@@ -26,9 +27,14 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:viewAny,'.User::class)->group(function () {
         Route::get('usuarios', [UserController::class, 'index'])->name('users.index');
         Route::post('usuarios', [UserController::class, 'store'])->name('users.store');
-        Route::put('usuarios/{user}/permiso', [UserController::class, 'updatePermission'])->name('users.permission');
         Route::put('usuarios/{user}/contrasena', [UserController::class, 'setPassword'])->name('users.password');
         Route::delete('usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+    Route::middleware('can:change-own-email')->group(function () {
+        Route::get('mi-cuenta/correo', [OwnerEmailController::class, 'edit'])->name('account.email');
+        Route::post('mi-cuenta/correo', [OwnerEmailController::class, 'store'])->middleware('throttle:email-change-send')->name('account.email.store');
+        Route::post('mi-cuenta/correo/confirmar', [OwnerEmailController::class, 'confirm'])->middleware('throttle:email-change-confirm')->name('account.email.confirm');
+        Route::delete('mi-cuenta/correo', [OwnerEmailController::class, 'destroy'])->name('account.email.destroy');
     });
     Route::get('auditoria', [AuditLogController::class, 'index'])->middleware('can:view-audit')->name('audit.index');
     Route::get('media/{type}/{id}/{variant}', [IdPhotoController::class, 'show'])->whereNumber('id')->name('media.show');

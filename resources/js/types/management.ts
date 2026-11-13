@@ -4,7 +4,6 @@ export type ManagedUser = {
     email: string;
     type: string;
     is_owner: boolean;
-    can_manage_cards: boolean;
     last_login_at: string | null;
 };
 

@@ -30,4 +30,17 @@ export type Paginated<T> = {
     meta: { current_page: number; last_page: number; total: number };
 };
 
-export type ClientFilters = { q: string; dni: { masked: string } | null };
+export type SearchRole = 'todos' | 'duenos' | 'autorizados';
+export type SearchCounts = { owners: number; authorized: number };
+export type SearchResult = {
+    key: string;
+    role: 'owner' | 'authorized';
+    match: 'exact' | 'prefix' | 'partial';
+    client: Client;
+    person: AuthorizedPerson | null;
+};
+export type ClientFilters = {
+    q: string;
+    dni: { masked: string } | null;
+    role: SearchRole;
+};

@@ -31,6 +31,6 @@ class ClientFactory extends Factory
 
     public function withIdPhoto(): static
     {
-        return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->placeholderIdPhoto(), PhotoOwner::Client));
+        return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->placeholderIdPhoto(PhotoOwner::Client), PhotoOwner::Client));
     }
 }

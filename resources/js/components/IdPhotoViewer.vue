@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Minus, Plus, RotateCcw, X } from '@lucide/vue';
+import { Maximize2, Minus, Plus, RotateCcw, X } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import type { PhotoUrls } from '@/types/cards';
 
-defineProps<{ photo: PhotoUrls; name: string }>();
+defineProps<{ photo: PhotoUrls; name: string; compact?: boolean }>();
 const open = ref(false);
 const zoom = ref(1);
 const pointers = new Map<number, { x: number; y: number }>();
@@ -60,7 +60,7 @@ function pointerUp(event: PointerEvent): void {
     <Dialog v-model:open="open">
         <button
             type="button"
-            class="shrink-0 overflow-hidden rounded-lg border bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+            class="relative shrink-0 overflow-hidden rounded-xl border bg-muted focus-visible:ring-2 focus-visible:ring-primary"
             :aria-label="`Ver foto de la cédula de ${name}`"
             @click="open = true"
         >
@@ -68,12 +68,19 @@ function pointerUp(event: PointerEvent): void {
                 :src="photo.thumb"
                 :alt="`Foto de la cédula de ${name}`"
                 loading="lazy"
-                class="h-20 w-28 object-contain sm:h-24 sm:w-36"
+                :class="
+                    compact
+                        ? 'h-11 w-16 object-cover'
+                        : 'aspect-[3/2] w-28 object-cover'
+                "
+            />
+            <Maximize2
+                class="absolute right-1 bottom-1 size-4 rounded bg-black/60 p-0.5 text-white"
             />
         </button>
         <DialogContent
             :show-close-button="false"
-            class="inset-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-slate-950 p-0 text-white sm:max-w-none"
+            class="inset-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-black/90 p-0 text-white sm:max-w-none"
         >
             <div class="flex shrink-0 items-center justify-between gap-3 p-3">
                 <DialogTitle class="truncate text-sm"
@@ -83,6 +90,7 @@ function pointerUp(event: PointerEvent): void {
                     type="button"
                     variant="secondary"
                     class="min-h-11"
+                    aria-label="Cerrar visor de foto"
                     @click="open = false"
                     ><X />Cerrar</Button
                 >

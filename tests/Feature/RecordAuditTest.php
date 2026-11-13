@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 
 it('records the authenticated actor IP and client morph subject', function () {
     $this->travelTo(now()->startOfSecond());
-    $actor = User::factory()->manager()->create();
+    $actor = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $this->actingAs($actor);
     request()->server->set('REMOTE_ADDR', '192.0.2.42');
@@ -99,11 +99,11 @@ it('audits user creation within the action', function () {
     $actor = User::factory()->owner()->create();
     $this->actingAs($actor);
 
-    $user = app(CreateUser::class)->handle('Gestor de Prueba', 'gestor@example.com', 'abcdefgh', false, true, true);
+    $user = app(CreateUser::class)->handle('Gestor de Prueba', 'gestor@example.com', 'abcdefgh', false, true);
 
     $this->assertDatabaseHas('audit_logs', [
         'user_id' => $actor->id, 'action' => 'user.created', 'subject_type' => 'user', 'subject_id' => $user->id,
-        'description' => 'Usuario creado: Gestor de Prueba (gestor@example.com), tipo Gestión',
+        'description' => 'Usuario creado: Gestor de Prueba (gestor@example.com), tipo Empleado',
     ]);
 });
 
@@ -143,12 +143,12 @@ it('records console user creation with no actor', function () {
     $user = User::query()->sole();
     $this->assertDatabaseHas('audit_logs', [
         'user_id' => null, 'action' => 'user.created', 'subject_type' => 'user', 'subject_id' => $user->id,
-        'description' => 'Usuario creado: Principal de Prueba (principal@example.com), tipo Principal',
+        'description' => 'Usuario creado: Principal de Prueba (principal@example.com), tipo Administradora',
     ]);
 });
 
 it('rolls back user creation when auditing fails', function () {
-    expect(fn () => app(CreateUser::class)->handle('Prueba 0801199012345', 'test@example.com', 'abcdefgh', false, false, true))
+    expect(fn () => app(CreateUser::class)->handle('Prueba 0801199012345', 'test@example.com', 'abcdefgh', false, true))
         ->toThrow(InvalidArgumentException::class);
 
     $this->assertDatabaseCount('users', 0);

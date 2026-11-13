@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+  <title>Cédula ilustrada de prueba, sin validez</title>
+  <rect width="960" height="640" rx="28" fill="#FFFFFF"/>
+  <rect x="12" y="12" width="936" height="616" rx="22" fill="#E9EDFA" stroke="#CDD4DE" stroke-width="4"/>
+  <path d="M34 12 H926 Q948 12 948 34 V112 H12 V34 Q12 12 34 12 Z" fill="#FFC93C"/>
+  <text x="480" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0B1F4B">CÉDULA DE PRUEBA — SIN VALIDEZ</text>
+  <rect x="52" y="150" width="330" height="380" rx="30" fill="#FFFFFF" opacity="0.7"/>
+  <g transform="translate(8 16)">
+    <path d="M88 492 L111 421 L179 389 L220 407 L262 389 L330 421 L355 492 Z" fill="#5E6D96"/>
+    <rect x="198" y="326" width="44" height="75" rx="19" fill="#A5AFBE"/>
+    <ellipse cx="220" cy="278" rx="75" ry="91" fill="#BAC3CF"/>
+    <path d="M132 295 C110 200 164 154 224 166 C291 158 320 210 302 286 L277 246 C240 254 203 228 177 213 L154 295 Z" fill="#46536A"/>
+  </g>
+  <g fill="#B3BBC7">
+    <rect x="430" y="185" width="400" height="22" rx="11"/>
+    <rect x="430" y="235" width="325" height="18" rx="9"/>
+    <rect x="430" y="310" width="360" height="18" rx="9"/>
+    <rect x="430" y="358" width="290" height="18" rx="9"/>
+    <rect x="430" y="433" width="380" height="18" rx="9"/>
+    <rect x="430" y="481" width="245" height="18" rx="9"/>
+  </g>
+  <text x="480" y="588" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" letter-spacing="5" fill="#667085">SIN VALIDEZ</text>
+</svg>

@@ -15,7 +15,7 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertOk()
-            ->assertSee('Super El Rey — Autorización de tarjeta')
+            ->assertSee('ReyPass — Super El Rey')
             ->assertSee('lang="es"', escape: false);
     }
 

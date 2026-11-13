@@ -54,12 +54,12 @@ it('creates the database without unused recovery, passkey tables or two factor c
         ->and(Schema::hasColumns('users', ['two_factor_confirmed_at']))->toBeFalse();
 });
 
-it('ignores stale dark appearance preferences on login', function () {
+it('uses light mode for an invalid encrypted appearance preference', function () {
     $this->withCookie('appearance', 'dark')
         ->get(route('login'))
         ->assertOk()
-        ->assertSee('<html lang="es">', escape: false)
-        ->assertSee('name="color-scheme" content="light"', escape: false)
+        ->assertSee('<html lang="es" class="">', escape: false)
+        ->assertSee('name="color-scheme" content="light dark"', escape: false)
         ->assertDontSee('class="dark"', escape: false)
         ->assertDontSee('prefers-color-scheme');
 });

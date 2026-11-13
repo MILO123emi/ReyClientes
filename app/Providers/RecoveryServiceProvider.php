@@ -20,6 +20,12 @@ class RecoveryServiceProvider extends ServiceProvider
                 ->response(fn (Request $request, array $headers) => response()->json(['message' => 'Demasiados intentos. Espera 15 minutos para pedir otro código.'], 429, $headers));
         });
 
+        RateLimiter::for('email-change-send', fn (Request $request): Limit => Limit::perMinutes(15, 3)->by('email-change-send:'.$request->user()?->id)
+            ->response(fn (Request $request, array $headers) => response()->json(['message' => 'Demasiados intentos. Espera 15 minutos para pedir otro código.'], 429, $headers)));
+
+        RateLimiter::for('email-change-confirm', fn (Request $request): Limit => Limit::perMinutes(15, 10)->by('email-change-confirm:'.$request->user()?->id)
+            ->response(fn (Request $request, array $headers) => response()->json(['message' => 'Demasiados intentos. Espera 15 minutos para verificar otro código.'], 429, $headers)));
+
         RateLimiter::for('recovery-verify', fn (Request $request): Limit => Limit::perMinutes(15, 10)->by((string) $request->ip())
             ->response(fn (Request $request, array $headers) => response()->json(['message' => 'Demasiados intentos. Espera 15 minutos para verificar otro código.'], 429, $headers)));
     }

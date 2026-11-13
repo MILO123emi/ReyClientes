@@ -3,10 +3,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Super El Rey';
-
 void createInertiaApp({
-    title: () => `${appName} — Autorización de tarjeta`,
+    title: () => 'ReyPass — Super El Rey',
     layout: (name) => {
         switch (true) {
             case name.startsWith('auth/'):

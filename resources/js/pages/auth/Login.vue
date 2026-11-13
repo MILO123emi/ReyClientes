@@ -60,7 +60,7 @@ defineProps<{
                     <Label for="password">Contraseña</Label>
                     <Link
                         :href="recover()"
-                        class="inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4"
+                        class="inline-flex min-h-11 items-center text-sm text-link underline underline-offset-4"
                         >¿Olvidaste tu contraseña?</Link
                     >
                 </div>

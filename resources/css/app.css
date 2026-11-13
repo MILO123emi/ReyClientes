@@ -9,7 +9,7 @@
 
 @theme inline {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
@@ -26,6 +26,13 @@
     --color-popover: var(--popover);
     --color-popover-foreground: var(--popover-foreground);
 
+    --color-brand-navy: var(--brand-navy);
+    --color-brand-blue-soft: var(--brand-blue-soft);
+    --color-brand-yellow-soft: var(--brand-yellow-soft);
+    --color-destructive-soft: var(--destructive-soft);
+    --color-destructive-soft-foreground: var(--destructive-soft-foreground);
+    --color-blue-soft-foreground: var(--blue-soft-foreground);
+    --color-link: var(--link);
     --color-brand-blue: var(--brand-blue);
     --color-brand-blue-dark: var(--brand-blue-dark);
     --color-brand-red: var(--brand-red);
@@ -49,70 +56,149 @@
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
-
-    --color-chart-1: var(--chart-1);
-    --color-chart-2: var(--chart-2);
-    --color-chart-3: var(--chart-3);
-    --color-chart-4: var(--chart-4);
-    --color-chart-5: var(--chart-5);
-
-    --color-sidebar: var(--sidebar);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
     color-scheme: light;
+    --brand-navy: #0b1f4b;
     --brand-blue: #2552c3;
     --brand-blue-dark: #1e44a3;
-    --brand-red: #f30c0e;
-    --brand-yellow: #f4f210;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
+    --brand-blue-soft: #eaf0fd;
+    --brand-yellow: #ffc93c;
+    --brand-yellow-soft: #fff4d1;
+    --brand-red: #e0262b;
+    --background: #f4f6fb;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
     --primary: var(--brand-blue);
     --primary-foreground: #ffffff;
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: var(--brand-yellow);
-    --accent-foreground: #1a1a1a;
-    --destructive: #c8090b;
+    --secondary: #edf0f6;
+    --secondary-foreground: var(--foreground);
+    --muted: #edf0f6;
+    --muted-foreground: #5a6478;
+    --accent: var(--brand-yellow-soft);
+    --accent-foreground: #7a5600;
+    --destructive: #c81e1e;
     --destructive-foreground: #ffffff;
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
+    --destructive-soft: #fdecec;
+    --destructive-soft-foreground: #c81e1e;
+    --blue-soft-foreground: #1e44a3;
+    --link: #2552c3;
+    --border: #e2e7f0;
+    --input: #e2e7f0;
     --ring: var(--brand-blue);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: var(--brand-blue);
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: var(--brand-yellow);
-    --sidebar-accent-foreground: #1a1a1a;
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: var(--brand-blue);
+    --radius: 0.875rem;
 }
-
+.dark {
+    color-scheme: dark;
+    --background: #08122b;
+    --card: #0f1d3f;
+    --popover: #0f1d3f;
+    --brand-navy: #050d24;
+    --border: #23345f;
+    --input: #23345f;
+    --foreground: #e7ecf6;
+    --muted: #16264d;
+    --secondary: #16264d;
+    --muted-foreground: #a5b0c9;
+    --primary: #3b6ae0;
+    --link: #8fb0ff;
+    --ring: #6b92f5;
+    --brand-blue-soft: #1b2d5e;
+    --blue-soft-foreground: #c7d6ff;
+    --brand-yellow-soft: #3a2e0a;
+    --accent-foreground: #ffd66b;
+    --destructive: #d32f2f;
+    --destructive-soft: #3a1417;
+    --destructive-soft-foreground: #ffb4b4;
+}
+@utility shadow-card {
+    box-shadow:
+        0 1px 2px rgb(15 23 42 / 0.04),
+        0 4px 16px rgb(15 23 42 / 0.06);
+}
+@utility brand-stripe {
+    height: 3px;
+    background: linear-gradient(
+        to right,
+        #2552c3 0 33.333%,
+        #ffc93c 33.333% 66.666%,
+        #e0262b 66.666% 100%
+    );
+}
 @layer base {
     * {
         @apply border-border outline-ring/50;
     }
-
     body {
         @apply bg-background text-foreground;
+        font-size: 15px;
+    }
+    :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 3px;
+    }
+    input,
+    select {
+        min-height: 48px;
+        border-radius: 0.75rem;
+    }
+    button,
+    a {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+.form-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--card);
+}
+.form-dialog > [data-slot='dialog-header'] {
+    flex: none;
+    padding: max(24px, env(safe-area-inset-top)) 56px 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+.form-dialog > [data-slot='dialog-close'] {
+    z-index: 2;
+}
+.form-dialog > form {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px;
+}
+.form-dialog > [data-slot='dialog-footer'] {
+    flex: none;
+    background: var(--card);
+    padding: 16px 24px max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+}
+@media (max-width: 639px) {
+    .form-dialog {
+        height: 100dvh;
+        max-width: none;
+        border-radius: 0;
+    }
+    .form-dialog > [data-slot='dialog-footer'] {
+        flex-direction: row;
+    }
+    .form-dialog > [data-slot='dialog-footer'] > button {
+        flex: 1;
+        min-height: 48px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

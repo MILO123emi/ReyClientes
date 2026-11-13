@@ -12,7 +12,7 @@ defineOptions({
     layout: {
         title: 'Recuperar contraseña',
         description:
-            'La recuperación por correo está disponible para la administradora principal.',
+            'El código por correo es solo para la administradora. Los empleados deben pedirle a ella una contraseña nueva.',
     },
 });
 defineProps<{ status?: string | null }>();
@@ -25,7 +25,7 @@ function submit(): void {
 <template>
     <div class="grid gap-6">
         <Head title="Recuperar contraseña" />
-        <p v-if="status" role="status" class="text-sm text-primary">
+        <p v-if="status" role="status" class="text-sm text-link">
             {{ status }}
         </p>
         <form class="grid gap-5" @submit.prevent="submit">
@@ -52,7 +52,7 @@ function submit(): void {
         </form>
         <Link
             :href="login()"
-            class="inline-flex min-h-11 items-center justify-center text-sm text-primary underline underline-offset-4"
+            class="inline-flex min-h-11 items-center justify-center text-sm text-link underline underline-offset-4"
             >Volver al inicio de sesión</Link
         >
     </div>

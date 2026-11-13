@@ -17,7 +17,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property bool $is_owner
- * @property bool $can_manage_cards
  * @property bool $must_change_password
  * @property Carbon|null $last_login_at
  * @property string|null $remember_token
@@ -42,7 +41,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_owner' => 'boolean',
-            'can_manage_cards' => 'boolean',
             'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
         ];
@@ -53,13 +51,8 @@ class User extends Authenticatable
         return $this->is_owner;
     }
 
-    public function canManageCards(): bool
-    {
-        return $this->isOwner() || $this->can_manage_cards;
-    }
-
     public function typeLabel(): string
     {
-        return $this->isOwner() ? 'Principal' : ($this->canManageCards() ? 'Gestión' : 'Consulta');
+        return $this->isOwner() ? 'Administradora' : 'Empleado';
     }
 }

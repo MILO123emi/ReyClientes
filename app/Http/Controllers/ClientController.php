@@ -11,6 +11,7 @@ use App\Http\Requests\Clients\SearchClientRequest;
 use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
+use App\Http\Resources\SearchResultResource;
 use App\Models\Client;
 use App\Queries\ClientSearch;
 use App\Support\Dni;
@@ -39,16 +40,22 @@ class ClientController extends Controller
         $stored = $request->session()->get('client_search');
         $dni = $request->boolean('dni') && is_array($stored) && isset($stored['hash'], $stored['masked']) ? $stored : null;
         $hash = $dni !== null && is_string($dni['hash']) ? $dni['hash'] : null;
-        $query = Client::query()->with('authorizedPeople')->withCount('authorizedPeople')->orderBy('full_name')->orderBy('id');
-        $search->apply($query, $text, $hash);
-        $clients = $query->paginate(20)->appends($hash !== null ? ['dni' => 1] : ($text !== '' ? ['q' => $text] : []));
-        $matchedPersonIds = $search->matchedPersonIds($clients->getCollection(), $text, $hash);
+        $role = $request->query('rol');
+        $role = in_array($role, ['duenos', 'autorizados'], true) ? $role : 'todos';
+        $parameters = $hash !== null ? ['dni' => 1] : ($text !== '' ? ['q' => $text] : []);
+        if ($role !== 'todos') {
+            $parameters['rol'] = $role;
+        }
+        $isResults = $text !== '' || $hash !== null || $role === 'autorizados';
+        $clients = $isResults ? null : Client::query()->with('authorizedPeople')->withCount('authorizedPeople')
+            ->orderBy('full_name')->orderBy('id')->paginate(20)->appends($parameters);
 
         return Inertia::render('clients/Index', [
-            'clients' => ClientResource::collection($clients),
+            'clients' => $clients !== null ? ClientResource::collection($clients) : null,
+            'results' => $isResults ? SearchResultResource::collection($search->paginate($text, $hash, $role, $parameters)) : null,
             'relationships' => Relationship::options(),
-            'filters' => ['q' => $hash === null ? $text : '', 'dni' => $hash !== null ? ['masked' => $dni['masked']] : null],
-            'matchedPersonIds' => $matchedPersonIds,
+            'filters' => ['q' => $hash === null ? $text : '', 'dni' => $hash !== null ? ['masked' => $dni['masked']] : null, 'role' => $role],
+            'counts' => $search->counts($text, $hash),
         ]);
     }
 

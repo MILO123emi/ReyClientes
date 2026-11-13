@@ -4,13 +4,14 @@ use App\Actions\Users\CreateUser;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 it('normalizes emails and assigns protected flags through the action', function () {
-    $user = app(CreateUser::class)->handle('Usuario de Prueba', ' Manager@Example.com ', 'abcdefgh', false, true, true);
+    $user = app(CreateUser::class)->handle('Usuario de Prueba', ' Manager@Example.com ', 'abcdefgh', false, true);
 
     expect($user->email)->toBe('manager@example.com')
-        ->and($user->canManageCards())->toBeTrue()
+        ->and($user->isOwner())->toBeFalse()
         ->and($user->must_change_password)->toBeTrue()
         ->and(Hash::check('abcdefgh', $user->password))->toBeTrue();
 });
@@ -18,7 +19,7 @@ it('normalizes emails and assigns protected flags through the action', function 
 it('rejects a second principal in the action before inserting', function () {
     User::factory()->owner()->create();
 
-    expect(fn () => app(CreateUser::class)->handle('Otra Principal de Prueba', 'second@example.com', 'abcdefgh', true, false, false))
+    expect(fn () => app(CreateUser::class)->handle('Otra Principal de Prueba', 'second@example.com', 'abcdefgh', true, false))
         ->toThrow(DomainException::class, 'Ya existe una administradora principal.');
     $this->assertDatabaseCount('users', 1);
 });
@@ -33,10 +34,10 @@ it('rejects a second principal at the database boundary', function () {
 it('does not mass assign protected role flags', function () {
     $user = User::query()->create([
         'name' => 'Usuario de Prueba', 'email' => 'user@example.com', 'password' => 'abcdefgh',
-        'is_owner' => true, 'can_manage_cards' => true, 'must_change_password' => true,
+        'is_owner' => true, 'must_change_password' => true,
     ])->refresh();
 
-    expect($user->isOwner())->toBeFalse()->and($user->canManageCards())->toBeFalse()
+    expect($user->isOwner())->toBeFalse()->and($user->isOwner())->toBeFalse()
         ->and($user->must_change_password)->toBeFalse();
 });
 
@@ -60,17 +61,16 @@ it('does not update the last login after an unsuccessful login', function () {
     expect($user->refresh()->last_login_at)->toBeNull();
 });
 
-it('seeds exactly the three fictional local accounts without forcing a password change', function () {
+it('seeds exactly the two fictional local accounts without forcing a password change', function () {
     Storage::fake('local');
     $this->app->detectEnvironment(fn () => 'local');
 
     $this->seed();
     $this->seed();
 
-    $this->assertDatabaseCount('users', 3);
+    $this->assertDatabaseCount('users', 2);
     $this->assertDatabaseHas('users', ['email' => 'owner@example.com', 'is_owner' => true, 'must_change_password' => false]);
-    $this->assertDatabaseHas('users', ['email' => 'gestion@example.com', 'can_manage_cards' => true, 'must_change_password' => false]);
-    $this->assertDatabaseHas('users', ['email' => 'consulta@example.com', 'is_owner' => false, 'can_manage_cards' => false, 'must_change_password' => false]);
+    $this->assertDatabaseHas('users', ['email' => 'empleado@example.com', 'is_owner' => false, 'must_change_password' => false]);
     foreach (User::all() as $user) {
         expect(Hash::check('password', $user->password))->toBeTrue();
     }
@@ -84,3 +84,9 @@ it('never seeds default users outside the local environment', function (string $
 
     $this->assertDatabaseCount('users', 0);
 })->with(['testing', 'staging', 'production']);
+
+it('removes the obsolete permission column and endpoint', function () {
+    expect(Schema::hasColumn('users', implode('_', ['can', 'manage', 'cards'])))->toBeFalse();
+    $owner = User::factory()->owner()->create();
+    $this->actingAs($owner)->put('/usuarios/'.$owner->id.'/permiso', ['current_password' => 'password'])->assertNotFound();
+});

@@ -16,28 +16,28 @@ it('shows only the managed user resource fields to the principal', function () {
 
     $response = $this->actingAs($owner)->get(route('users.index'))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('users/Index')->has('users.data', 2)
-            ->where('users.data.0.id', $owner->id)->where('users.data.0.type', 'Principal')
+            ->where('users.data.0.id', $owner->id)->where('users.data.0.type', 'Administradora')
             ->where('users.data.1.last_login_at', $user->last_login_at->toIso8601String()));
 
     expect($response->inertiaProps('users.data.1'))->toHaveKeys([
-        'id', 'name', 'email', 'type', 'is_owner', 'can_manage_cards', 'last_login_at',
-    ])->toHaveCount(7);
+        'id', 'name', 'email', 'type', 'is_owner', 'last_login_at',
+    ])->toHaveCount(6);
     expect(json_encode($response->inertiaProps('users')))->not->toContain($user->password, 'remember_token', 'must_change_password');
 });
 
-it('creates normalized managed users with temporary passwords and an optional permission', function (bool $permission) {
+it('creates normalized managed users with temporary passwords and ignores obsolete permission input', function (bool $permission) {
     $owner = User::factory()->owner()->create();
 
     $this->actingAs($owner)->from(route('users.index'))->post(route('users.store'), [
         'name' => '  Usuario De Prueba  ', 'email' => ' NewUser@Example.com ',
-        'password' => 'abcdefgh', 'password_confirmation' => 'abcdefgh', 'can_manage_cards' => $permission,
+        'password' => 'abcdefgh', 'password_confirmation' => 'abcdefgh', implode('_', ['can', 'manage', 'cards']) => $permission,
         'current_password' => 'password', 'is_owner' => true, 'must_change_password' => false,
     ])->assertSessionHasNoErrors()->assertRedirect(route('users.index'));
 
     $user = User::query()->where('email', 'newuser@example.com')->sole();
     expect($user->name)->toBe('Usuario De Prueba');
     expect($user->is_owner)->toBeFalse();
-    expect($user->can_manage_cards)->toBe($permission);
+    expect($user->isOwner())->toBeFalse();
     expect($user->must_change_password)->toBeTrue();
     expect(Hash::check('abcdefgh', $user->password))->toBeTrue();
     $this->assertDatabaseHas('audit_logs', [
@@ -45,7 +45,7 @@ it('creates normalized managed users with temporary passwords and an optional pe
     ]);
 })->with([false, true]);
 
-it('defaults the permission checkbox to false when omitted', function () {
+it('creates an employee when permission input is omitted', function () {
     $owner = User::factory()->owner()->create();
 
     $this->actingAs($owner)->post(route('users.store'), [
@@ -53,7 +53,7 @@ it('defaults the permission checkbox to false when omitted', function () {
         'password' => 'abcdefgh', 'password_confirmation' => 'abcdefgh', 'current_password' => 'password',
     ])->assertSessionHasNoErrors();
 
-    expect(User::query()->where('email', 'newuser@example.com')->sole()->can_manage_cards)->toBeFalse();
+    expect(User::query()->where('email', 'newuser@example.com')->sole()->is_owner)->toBeFalse();
 });
 
 it('rejects invalid managed user input without creating users or audit', function (string $kind, string $field) {
@@ -69,7 +69,6 @@ it('rejects invalid managed user input without creating users or audit', functio
         'email-duplicate' => ['email' => ' Owner@Example.com '],
         'password-short' => ['password' => '1234567', 'password_confirmation' => '1234567'],
         'confirmation' => ['password_confirmation' => 'different'],
-        'permission' => ['can_manage_cards' => 'invalid'],
     };
 
     $this->actingAs($owner)->post(route('users.store'), array_replace($payload, $overrides))->assertSessionHasErrors($field);
@@ -78,34 +77,8 @@ it('rejects invalid managed user input without creating users or audit', functio
     $this->assertDatabaseCount('audit_logs', 0);
 })->with([
     ['name-missing', 'name'], ['name-long', 'name'], ['email-invalid', 'email'], ['email-duplicate', 'email'],
-    ['password-short', 'password'], ['confirmation', 'password'], ['permission', 'can_manage_cards'],
+    ['password-short', 'password'], ['confirmation', 'password'],
 ]);
-
-it('changes management permissions and records the Spanish change description', function (bool $enabled) {
-    $owner = User::factory()->owner()->create();
-    $user = User::factory()->create(['name' => 'Usuario De Prueba', 'can_manage_cards' => ! $enabled]);
-
-    $this->actingAs($owner)->put(route('users.permission', $user), [
-        'can_manage_cards' => $enabled, 'current_password' => 'password',
-    ])->assertSessionHasNoErrors();
-
-    expect($user->refresh()->can_manage_cards)->toBe($enabled);
-    $this->assertDatabaseHas('audit_logs', [
-        'action' => 'user.permission_changed', 'user_id' => $owner->id, 'subject_id' => $user->id,
-        'description' => 'Permiso de gestión '.($enabled ? 'activado' : 'desactivado').' para Usuario De Prueba',
-    ]);
-})->with([true, false]);
-
-it('does not audit an unchanged permission', function () {
-    $owner = User::factory()->owner()->create();
-    $user = User::factory()->manager()->create();
-
-    $this->actingAs($owner)->put(route('users.permission', $user), [
-        'can_manage_cards' => true, 'current_password' => 'password',
-    ])->assertSessionHasNoErrors();
-
-    $this->assertDatabaseCount('audit_logs', 0);
-});
 
 it('assigns a temporary password and closes only the affected users sessions', function () {
     $owner = User::factory()->owner()->create();
@@ -137,11 +110,11 @@ it('protects the principal from permission password and deletion requests', func
     $originalPassword = $owner->password;
     $method = $operation === 'delete' ? 'DELETE' : 'PUT';
     $route = match ($operation) {
-        'permission' => 'users.permission', 'password' => 'users.password', 'delete' => 'users.destroy',
+        'password' => 'users.password', 'delete' => 'users.destroy',
     };
 
     $this->actingAs($owner)->call($method, route($route, $owner), [
-        'current_password' => 'password', 'can_manage_cards' => false,
+        'current_password' => 'password',
         'password' => 'temporary-password', 'password_confirmation' => 'temporary-password',
     ])->assertForbidden();
 
@@ -149,7 +122,7 @@ it('protects the principal from permission password and deletion requests', func
     expect($owner->refresh()->is_owner)->toBeTrue();
     expect($owner->password)->toBe($originalPassword);
     $this->assertDatabaseCount('audit_logs', 0);
-})->with(['permission', 'password', 'delete']);
+})->with(['password', 'delete']);
 
 it('deletes ordinary users and their sessions while retaining existing audit records', function () {
     $owner = User::factory()->owner()->create();

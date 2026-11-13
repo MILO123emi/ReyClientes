@@ -30,7 +30,7 @@ function personEndpointPayload(array $overrides = []): array
 
 it('creates an authorized person with normalized encrypted data photos attribution and masked audit', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $other = Client::factory()->create();
 
@@ -61,7 +61,7 @@ it('creates an authorized person with normalized encrypted data photos attributi
 
 it('rejects an identity equal to the titulars identity on create and update', function (string $operation) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create(['dni' => '0101198554321']);
     $person = AuthorizedPerson::factory()->for($client)->create();
     $original = $person->dni;
@@ -79,7 +79,7 @@ it('rejects an identity equal to the titulars identity on create and update', fu
 
 it('rejects a duplicate authorized identity in the same client on create and update', function (string $operation) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     AuthorizedPerson::factory()->for($client)->create(['dni' => '0101198554321']);
     $person = AuthorizedPerson::factory()->for($client)->create();
@@ -98,7 +98,7 @@ it('rejects a duplicate authorized identity in the same client on create and upd
 
 it('allows the same authorized identity in two different clients', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $clients = Client::factory()->count(2)->create();
     $this->actingAs($user);
 
@@ -114,7 +114,7 @@ it('allows the same authorized identity in two different clients', function () {
 
 it('rejects missing or invalid relationships and unspecified other relationships', function (string $kind, string $field) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $overrides = match ($kind) {
         'missing' => ['relationship' => null],
@@ -143,7 +143,7 @@ it('rejects missing or invalid relationships and unspecified other relationships
 
 it('exposes the trimmed custom relationship label and clears it when another relationship is chosen', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $this->actingAs($user)->post(route('people.store', $client), personEndpointPayload([
         'relationship' => 'otro', 'relationship_other' => '  Vecino  ',
@@ -164,7 +164,7 @@ it('exposes the trimmed custom relationship label and clears it when another rel
 
 it('keeps the persons own identity and photos when editing other fields', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $person = AuthorizedPerson::factory()->withIdPhoto()->create(['dni' => '0101198554321']);
     $paths = [$person->id_photo_path, $person->id_photo_thumb_path];
 
@@ -180,7 +180,7 @@ it('keeps the persons own identity and photos when editing other fields', functi
 
 it('replaces authorized person photos and removes the old files after commit', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $person = AuthorizedPerson::factory()->withIdPhoto()->create();
     $oldPaths = [$person->id_photo_path, $person->id_photo_thumb_path];
 
@@ -197,7 +197,7 @@ it('replaces authorized person photos and removes the old files after commit', f
 
 it('preserves existing person data and files when audit fails during replacement', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $person = AuthorizedPerson::factory()->withIdPhoto()->create();
     $original = DB::table('authorized_people')->where('id', $person->id)->first();
     $files = Storage::disk('local')->allFiles();
@@ -214,7 +214,7 @@ it('preserves existing person data and files when audit fails during replacement
 
 it('cleans up newly stored photos if authorized person creation rolls back', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->create();
     $this->mock(RecordAudit::class)->shouldReceive('handle')->once()->andThrow(new RuntimeException('Fallo de auditoría de prueba.'));
     Exceptions::fake();
@@ -229,7 +229,7 @@ it('cleans up newly stored photos if authorized person creation rolls back', fun
 
 it('deletes only the selected persons rows and photos and retains the client and other people', function () {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $client = Client::factory()->withIdPhoto()->create();
     $person = AuthorizedPerson::factory()->for($client)->withIdPhoto()->create(['full_name' => 'Rosa De Prueba', 'dni' => '0101198554321']);
     $other = AuthorizedPerson::factory()->for($client)->withIdPhoto()->create();
@@ -252,7 +252,7 @@ it('deletes only the selected persons rows and photos and retains the client and
 
 it('returns 404 for nonexistent authorized people', function (string $method) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->call($method, '/autorizados/999999', personEndpointPayload())->assertNotFound();
 
@@ -264,7 +264,6 @@ it('enforces authorized person mutation permissions for every role and endpoint'
     Storage::fake('local');
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     $person = AuthorizedPerson::factory()->withIdPhoto()->create();
@@ -279,7 +278,7 @@ it('enforces authorized person mutation permissions for every role and endpoint'
 
     $response = $this->actingAs($user)->call($method, $uri, $payload);
 
-    if ($role === 'reader') {
+    if ($role === 'employee') {
         $response->assertForbidden();
         expect(DB::table('authorized_people')->get()->toArray())->toEqual($before);
         expect(Storage::disk('local')->allFiles())->toBe($files);
@@ -290,11 +289,11 @@ it('enforces authorized person mutation permissions for every role and endpoint'
             'create' => 'created', 'update' => 'updated', 'delete' => 'deleted',
         });
     }
-})->with(['reader', 'manager', 'owner'])->with(['create', 'update', 'delete']);
+})->with(['employee', 'owner'])->with(['create', 'update', 'delete']);
 
 it('rejects missing and incorrect passwords without changing authorized people or photos', function (string $operation, string $passwordState) {
     Storage::fake('local');
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $person = AuthorizedPerson::factory()->withIdPhoto()->create();
     $before = DB::table('authorized_people')->get()->toArray();
     $files = Storage::disk('local')->allFiles();

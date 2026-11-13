@@ -19,16 +19,16 @@ class ClientPolicy
 
     public function create(User $user): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 
     public function update(User $user, Client $client): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 
     public function delete(User $user, Client $client): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 }

@@ -7,6 +7,7 @@ export type User = {
         manageCards: boolean;
         manageUsers: boolean;
         viewAudit: boolean;
+        changeEmail: boolean;
     };
 };
 

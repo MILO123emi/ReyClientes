@@ -2,10 +2,23 @@
 
 namespace Database\Factories\Concerns;
 
+use App\Enums\PhotoOwner;
+
 trait MakesPlaceholderIdPhotos
 {
-    protected function placeholderIdPhoto(): string
+    protected function placeholderIdPhoto(?PhotoOwner $owner = null): string
     {
+        if ($owner !== null) {
+            $group = $owner === PhotoOwner::Client ? 'owner' : 'authorized';
+            $paths = glob(database_path('seeders/assets/id-photos/'.$group.'-*.png')) ?: [];
+            if ($paths !== []) {
+                $contents = file_get_contents(fake()->randomElement($paths));
+                if ($contents !== false) {
+                    return $contents;
+                }
+            }
+        }
+
         $canvas = imagecreatetruecolor(1000, 630);
         imagefilledrectangle($canvas, 0, 0, 999, 629, 0xEEEEEE);
         imagerectangle($canvas, 20, 20, 979, 609, 0x999999);

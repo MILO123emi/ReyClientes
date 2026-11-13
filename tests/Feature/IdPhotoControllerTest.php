@@ -16,7 +16,6 @@ it('serves private JPEG photos to every authenticated role for both owner types'
     Storage::fake('local');
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     $record = $model::factory()->withIdPhoto()->create();
@@ -28,7 +27,7 @@ it('serves private JPEG photos to every authenticated role for both owner types'
     expect($response->headers->get('Cache-Control'))->toContain('no-store', 'private');
     expect(getimagesizefromstring($response->getContent())['mime'])->toBe('image/jpeg');
     expect($response->getContent())->not->toContain("Exif\0\0");
-})->with(['reader', 'manager', 'owner'])
+})->with(['employee', 'owner'])
     ->with(['client' => ['client', Client::class], 'person' => ['person', AuthorizedPerson::class]]);
 
 it('serves different full and thumbnail image sizes', function () {
@@ -40,8 +39,8 @@ it('serves different full and thumbnail image sizes', function () {
     $full = $this->get('/media/client/'.$client->id.'/full')->assertOk();
     $thumb = $this->get('/media/client/'.$client->id.'/thumb')->assertOk();
 
-    expect(array_slice(getimagesizefromstring($full->getContent()), 0, 2))->toBe([1000, 630]);
-    expect(array_slice(getimagesizefromstring($thumb->getContent()), 0, 2))->toBe([320, 202]);
+    expect(array_slice(getimagesizefromstring($full->getContent()), 0, 2))->toBe([960, 640]);
+    expect(array_slice(getimagesizefromstring($thumb->getContent()), 0, 2))->toBe([320, 213]);
 });
 
 it('returns 404 for invalid parameters absent records or absent files', function (string $path) {

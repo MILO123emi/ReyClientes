@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 it('removes the latest photo pair when replacing through a stale client model', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create();
     $staleClient = Client::query()->findOrFail($client->id);
     $originalPaths = [$client->id_photo_path, $client->id_photo_thumb_path];
@@ -28,7 +28,7 @@ it('removes the latest photo pair when replacing through a stale client model', 
 
 it('cleans new photos when a stale client model refers to a deleted record', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create();
     $staleClient = Client::query()->findOrFail($client->id);
     app(DeleteClient::class)->handle($client);
@@ -44,7 +44,7 @@ it('cleans new photos when a stale client model refers to a deleted record', fun
 
 it('deletes current photo paths when deleting through a stale client model', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create();
     $staleClient = Client::query()->findOrFail($client->id);
     $updated = app(UpdateClient::class)->handle($client, ['full_name' => 'Nombre Actualizado'], UploadedFile::fake()->image('actualizada.jpg'));

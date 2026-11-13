@@ -13,6 +13,6 @@ class AuditLogResource extends JsonResource
     /** @return array<string,mixed> */
     public function toArray(Request $request): array
     {
-        return ['created_at' => $this->created_at->toIso8601String(), 'user' => $this->user->name ?? '—', 'action_label' => AuditAction::from($this->action)->label(), 'description' => $this->description, 'ip_address' => $this->ip_address];
+        return ['created_at' => $this->created_at->toIso8601String(), 'user' => $this->user->name ?? '—', 'action_label' => AuditAction::tryFrom($this->action)?->label() ?? 'Permiso cambiado', 'description' => $this->description, 'ip_address' => $this->ip_address];
     }
 }

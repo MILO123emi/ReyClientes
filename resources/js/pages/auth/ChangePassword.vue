@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import { update } from '@/actions/App/Http/Controllers/ForcedPasswordChangeController';
-import AppLayout from '@/layouts/AppLayout.vue';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { change } from '@/routes/password';
+import { logout } from '@/routes';
+import { index } from '@/routes/clients';
 
 type Props = {
     passwordRules: string;
@@ -20,16 +20,18 @@ const props = defineProps<Props>();
 
 defineOptions({
     layout: {
-        component: AppLayout,
+        component: AuthLayout,
         props: {
-            breadcrumbs: [{ title: 'Cambiar contraseña', href: change() }],
+            title: 'Cambiar contraseña',
+            description:
+                'Usa una contraseña de al menos 8 caracteres para proteger tu cuenta',
         },
     },
 });
 </script>
 
 <template>
-    <div class="w-full max-w-2xl space-y-6 p-4 md:p-6">
+    <div class="w-full space-y-6">
         <Head title="Cambiar contraseña" />
 
         <Alert v-if="mustChange" role="status">
@@ -40,12 +42,6 @@ defineOptions({
         </Alert>
 
         <div class="space-y-6">
-            <Heading
-                variant="small"
-                title="Cambiar contraseña"
-                description="Usa una contraseña de al menos 8 caracteres para proteger tu cuenta"
-            />
-
             <Form
                 v-bind="update.form()"
                 :options="{
@@ -100,8 +96,9 @@ defineOptions({
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex flex-col gap-3">
                     <Button
+                        class="min-h-12 w-full"
                         :disabled="processing"
                         data-test="update-password-button"
                     >
@@ -110,6 +107,21 @@ defineOptions({
                     </Button>
                 </div>
             </Form>
+            <div
+                class="flex flex-wrap items-center justify-between gap-3 text-sm"
+            >
+                <Link
+                    v-if="!mustChange"
+                    :href="index()"
+                    class="inline-flex min-h-11 items-center text-link underline"
+                    >Volver a clientes</Link
+                ><Link
+                    :href="logout()"
+                    as="button"
+                    class="inline-flex min-h-11 items-center text-link underline"
+                    >Cerrar sesión</Link
+                >
+            </div>
         </div>
     </div>
 </template>

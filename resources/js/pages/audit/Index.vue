@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { ChevronDown } from '@lucide/vue';
+import PageHeader from '@/components/PageHeader.vue';
 import ResourcePagination from '@/components/ResourcePagination.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -21,6 +24,14 @@ const form = useForm({
     from: props.filters.from ?? '',
     to: props.filters.to ?? '',
 });
+const filtersOpen = ref(false);
+function actionStyle(action: string): string {
+    if (action.includes('creado') || action.includes('creada'))
+        return 'bg-brand-blue-soft text-blue-soft-foreground';
+    if (action.includes('eliminado') || action.includes('eliminada'))
+        return 'bg-destructive-soft text-destructive-soft-foreground';
+    return 'bg-muted text-muted-foreground';
+}
 function filter(): void {
     form.get(index.url(), {
         preserveScroll: true,
@@ -38,72 +49,111 @@ function clear(): void {
 
 <template>
     <div class="grid gap-5">
-        <Head title="Auditoría" />
-        <h1 class="text-2xl font-semibold text-primary">Auditoría</h1>
-        <form
-            class="grid items-start gap-4 rounded-xl border bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
-            @submit.prevent="filter"
-        >
-            <div class="grid gap-2">
-                <Label for="audit-action">Acción</Label
-                ><select
-                    id="audit-action"
-                    v-model="form.action"
-                    class="min-h-11 w-full rounded-md border bg-white px-3 text-sm"
-                    :disabled="form.processing"
-                >
-                    <option value="">Todas las acciones</option>
-                    <option
-                        v-for="action in actions"
-                        :key="action.value"
-                        :value="action.value"
+        <Head title="Registro de cambios" />
+        <PageHeader
+            title="Registro de cambios"
+            subtitle="Actividad y seguridad de ReyPass"
+        />
+        <div class="rounded-2xl border bg-card shadow-card">
+            <Button
+                variant="ghost"
+                class="min-h-12 w-full justify-between px-4 lg:hidden"
+                :aria-expanded="filtersOpen"
+                aria-controls="audit-filters"
+                @click="filtersOpen = !filtersOpen"
+                >Filtros<ChevronDown
+                    class="size-4 transition-transform"
+                    :class="filtersOpen ? 'rotate-180' : ''"
+            /></Button>
+            <form
+                id="audit-filters"
+                :class="filtersOpen ? 'grid' : 'hidden lg:grid'"
+                class="items-start gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4"
+                @submit.prevent="filter"
+            >
+                <div class="grid gap-2">
+                    <Label for="audit-action">Acción</Label
+                    ><select
+                        id="audit-action"
+                        v-model="form.action"
+                        class="min-h-11 w-full rounded-md border bg-card px-3 text-sm"
+                        :disabled="form.processing"
                     >
-                        {{ action.label }}
-                    </option></select
-                ><InputError :message="form.errors.action" />
-            </div>
-            <div class="grid gap-2">
-                <Label for="audit-from">Desde</Label
-                ><Input
-                    id="audit-from"
-                    v-model="form.from"
-                    type="date"
-                    class="min-h-11"
-                    :disabled="form.processing"
-                /><InputError :message="form.errors.from" />
-            </div>
-            <div class="grid gap-2">
-                <Label for="audit-to">Hasta</Label
-                ><Input
-                    id="audit-to"
-                    v-model="form.to"
-                    type="date"
-                    class="min-h-11"
-                    :disabled="form.processing"
-                /><InputError :message="form.errors.to" />
-            </div>
-            <div class="flex flex-wrap gap-2 lg:pt-6">
-                <Button
-                    type="submit"
-                    class="min-h-11"
-                    :disabled="form.processing"
-                    ><Spinner v-if="form.processing" />Filtrar</Button
-                ><Button
-                    type="button"
-                    variant="outline"
-                    class="min-h-11"
-                    :disabled="form.processing"
-                    @click="clear"
-                    >Limpiar</Button
+                        <option value="">Todas las acciones</option>
+                        <option
+                            v-for="action in actions"
+                            :key="action.value"
+                            :value="action.value"
+                        >
+                            {{ action.label }}
+                        </option></select
+                    ><InputError :message="form.errors.action" />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="audit-from">Desde</Label
+                    ><Input
+                        id="audit-from"
+                        v-model="form.from"
+                        type="date"
+                        class="min-h-11"
+                        :disabled="form.processing"
+                    /><InputError :message="form.errors.from" />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="audit-to">Hasta</Label
+                    ><Input
+                        id="audit-to"
+                        v-model="form.to"
+                        type="date"
+                        class="min-h-11"
+                        :disabled="form.processing"
+                    /><InputError :message="form.errors.to" />
+                </div>
+                <div class="flex flex-wrap gap-2 lg:pt-6">
+                    <Button
+                        type="submit"
+                        class="min-h-11"
+                        :disabled="form.processing"
+                        ><Spinner v-if="form.processing" />Filtrar</Button
+                    ><Button
+                        type="button"
+                        variant="outline"
+                        class="min-h-11"
+                        :disabled="form.processing"
+                        @click="clear"
+                        >Limpiar</Button
+                    >
+                </div>
+            </form>
+        </div>
+        <div v-if="logs.data.length" class="grid gap-3 lg:hidden">
+            <article
+                v-for="(log, key) in logs.data"
+                :key="key"
+                class="min-w-0 rounded-2xl border bg-card p-4 shadow-card"
+            >
+                <span
+                    class="inline-flex rounded-full px-2.5 py-1 text-[13px] font-semibold"
+                    :class="actionStyle(log.action_label)"
+                    >{{ log.action_label }}</span
                 >
-            </div>
-        </form>
+                <p class="mt-3 text-sm leading-relaxed break-words">
+                    {{ log.description }}
+                </p>
+                <p
+                    class="mt-3 text-[13px] leading-relaxed break-words text-muted-foreground"
+                >
+                    {{ log.user }} · {{ formatDateTime(log.created_at) }} ·
+                    {{ log.ip_address ?? '—' }}
+                </p>
+            </article>
+        </div>
         <div
             v-if="logs.data.length"
-            class="overflow-x-auto rounded-xl border bg-white"
+            class="hidden rounded-2xl border bg-card shadow-card lg:block"
         >
-            <table class="w-full min-w-[820px] text-left text-sm">
-                <thead class="border-b bg-slate-50">
+            <table class="w-full table-fixed text-left text-sm">
+                <thead class="border-b bg-muted">
                     <tr>
                         <th class="p-4 font-semibold">Fecha</th>
                         <th class="p-4 font-semibold">Usuario</th>
@@ -114,12 +164,12 @@ function clear(): void {
                 </thead>
                 <tbody class="divide-y">
                     <tr v-for="(log, key) in logs.data" :key="key">
-                        <td class="p-4 whitespace-nowrap">
+                        <td class="p-4">
                             {{ formatDateTime(log.created_at) }}
                         </td>
-                        <td class="p-4">{{ log.user }}</td>
+                        <td class="p-4 break-words">{{ log.user }}</td>
                         <td class="p-4">{{ log.action_label }}</td>
-                        <td class="min-w-64 p-4">{{ log.description }}</td>
+                        <td class="p-4 break-words">{{ log.description }}</td>
                         <td class="p-4">{{ log.ip_address ?? '—' }}</td>
                     </tr>
                 </tbody>
@@ -127,9 +177,9 @@ function clear(): void {
         </div>
         <p
             v-else
-            class="rounded-xl border border-dashed bg-white p-12 text-center text-muted-foreground"
+            class="rounded-xl border border-dashed bg-card p-12 text-center text-muted-foreground"
         >
-            No hay registros de auditoría para estos filtros.
+            No hay cambios registrados para estos filtros.
         </p>
         <ResourcePagination :links="logs.links" :meta="logs.meta" />
     </div>

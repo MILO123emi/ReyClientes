@@ -49,10 +49,8 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        $canManageCards = ! $isOwner && $this->confirm('¿Puede agregar, editar y borrar clientes?', false);
-
         try {
-            $createUser->handle($name, $email, $password, $isOwner, $canManageCards, ! $isOwner);
+            $createUser->handle($name, $email, $password, $isOwner, ! $isOwner);
         } catch (DomainException $exception) {
             $this->error($exception->getMessage());
 

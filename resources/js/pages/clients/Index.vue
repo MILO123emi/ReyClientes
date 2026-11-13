@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { LoaderCircle, Plus, Search, X } from '@lucide/vue';
+import { ContactRound, LoaderCircle, Plus, Search, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import PageHeader from '@/components/PageHeader.vue';
+import Fab from '@/components/Fab.vue';
+import { Skeleton } from '@/components/ui/skeleton';
 import ClientCard from '@/components/ClientCard.vue';
+import PersonResultCard from '@/components/PersonResultCard.vue';
+import RoleFilter from '@/components/RoleFilter.vue';
 import ClientFormDialog from '@/components/ClientFormDialog.vue';
 import AuthorizedPersonFormDialog from '@/components/AuthorizedPersonFormDialog.vue';
 import InputError from '@/components/InputError.vue';
@@ -17,14 +22,52 @@ import type {
     ClientFilters,
     Paginated,
     RelationshipOption,
+    SearchResult,
+    SearchCounts,
 } from '@/types/cards';
 
 const props = defineProps<{
-    clients: Paginated<Client>;
+    clients: Paginated<Client> | null;
+    results: Paginated<SearchResult> | null;
+    counts: SearchCounts;
     relationships: RelationshipOption[];
     filters: ClientFilters;
-    matchedPersonIds: number[];
 }>();
+const pagination = computed(() => props.results ?? props.clients);
+const resultGroups = computed(() =>
+    [
+        {
+            role: 'owner',
+            label: 'Dueños de tarjeta',
+            results:
+                props.results?.data.filter(
+                    (result) => result.role === 'owner',
+                ) ?? [],
+        },
+        {
+            role: 'authorized',
+            label: 'Personas autorizadas',
+            results:
+                props.results?.data.filter(
+                    (result) => result.role === 'authorized',
+                ) ?? [],
+        },
+    ].filter((group) => group.results.length),
+);
+const emptyMessage = computed(() => {
+    const subject =
+        props.filters.role === 'duenos'
+            ? 'dueños'
+            : props.filters.role === 'autorizados'
+              ? 'personas autorizadas'
+              : 'resultados';
+    if (searchLabel.value)
+        return `No se encontraron ${subject} para "${searchLabel.value}".`;
+    if (props.filters.role !== 'todos') return `No se encontraron ${subject}.`;
+    return canManage.value
+        ? 'Aún no hay clientes. Agrega el primero.'
+        : 'Aún no hay clientes registrados.';
+});
 const page = usePage();
 const canManage = computed(() => page.props.auth.user.can.manageCards);
 const formOpen = ref(false);
@@ -82,6 +125,7 @@ function runSearch(value: string, generation: number): void {
         },
     };
 
+    const selectedRole = props.filters.role;
     if (digits.length === 13) {
         router.post(
             search().url,
@@ -89,12 +133,30 @@ function runSearch(value: string, generation: number): void {
             {
                 ...options,
                 onSuccess: () => {
-                    if (generation === searchGeneration) setQuery('');
+                    if (generation === searchGeneration) {
+                        setQuery('');
+                        if (selectedRole !== 'todos') {
+                            router.get(
+                                index().url,
+                                { dni: 1, rol: selectedRole },
+                                options,
+                            );
+                        }
+                    }
                 },
             },
         );
     } else {
-        router.get(index().url, text ? { q: text } : {}, options);
+        router.get(
+            index().url,
+            {
+                ...(text ? { q: text } : {}),
+                ...(props.filters.role !== 'todos'
+                    ? { rol: props.filters.role }
+                    : {}),
+            },
+            options,
+        );
     }
 }
 
@@ -108,6 +170,15 @@ function queueSearch(value: string, immediate = false): void {
     const generation = searchGeneration;
     if (immediate) runSearch(value, generation);
     else timer = setTimeout(() => runSearch(value, generation), 300);
+}
+
+function cancelPendingSearch(): void {
+    searchGeneration += 1;
+    clearTimeout(timer);
+    cancelSearch?.();
+    cancelSearch = null;
+    searching.value = false;
+    searchError.value = '';
 }
 
 function clearSearch(): void {
@@ -197,26 +268,32 @@ async function remove(client: Client): Promise<void> {
 <template>
     <div class="grid gap-5">
         <Head title="Clientes" />
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="text-2xl font-semibold text-primary">Clientes</h1>
-            <Button v-if="canManage" class="min-h-11" @click="edit(null)"
-                ><Plus />Cliente</Button
-            >
-        </div>
+        <PageHeader
+            title="Clientes"
+            :subtitle="
+                results
+                    ? `${results.meta.total} resultados`
+                    : `${clients?.meta.total ?? 0} ${clients?.meta.total === 1 ? 'cliente' : 'clientes'}`
+            "
+            ><Button v-if="canManage" class="min-h-12" @click="edit(null)"
+                ><Plus />Agregar cliente</Button
+            ></PageHeader
+        >
+        <Fab v-if="canManage" label="Agregar cliente" @click="edit(null)" />
         <form
-            class="relative"
+            class="sticky top-[calc(67px+env(safe-area-inset-top))] z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur"
             role="search"
             @submit.prevent="queueSearch(query, true)"
         >
             <Search
-                class="pointer-events-none absolute top-3 left-3 size-5 text-muted-foreground"
+                class="pointer-events-none absolute top-[22px] left-4 size-5 text-muted-foreground"
             /><Input
                 v-model="query"
                 type="search"
                 maxlength="100"
                 aria-label="Buscar por nombre, identidad o teléfono"
                 placeholder="Buscar por nombre, identidad o teléfono"
-                class="min-h-11 pl-10"
+                class="h-12 rounded-full bg-card pr-12 pl-10"
                 :aria-busy="searching"
                 :aria-invalid="Boolean(searchError)"
                 :aria-describedby="
@@ -225,8 +302,24 @@ async function remove(client: Client): Promise<void> {
             />
             <LoaderCircle
                 v-if="searching"
-                class="pointer-events-none absolute top-3 right-3 size-5 animate-spin text-primary"
+                class="pointer-events-none absolute top-[22px] right-4 size-5 animate-spin text-primary"
                 aria-label="Buscando"
+            />
+            <Button
+                v-if="query && !searching"
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="absolute top-2.5 right-2 size-11 rounded-full"
+                aria-label="Limpiar búsqueda"
+                @click="clearSearch"
+                ><X
+            /></Button>
+            <RoleFilter
+                :filters="filters"
+                :counts="counts"
+                @before-navigate="cancelPendingSearch"
+                @busy="searching = $event"
             />
         </form>
         <InputError id="client-search-error" :message="searchError" />
@@ -245,13 +338,51 @@ async function remove(client: Client): Promise<void> {
                 ><X
             /></Button>
         </div>
-        <div v-if="clients.data.length" class="grid gap-4">
+        <div
+            v-if="searching"
+            class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3"
+            aria-label="Buscando clientes"
+        >
+            <Skeleton v-for="n in 3" :key="n" class="h-56 rounded-2xl" />
+        </div>
+        <div v-else-if="results?.data.length" class="grid gap-5">
+            <section
+                v-for="group in resultGroups"
+                :key="group.role"
+                class="min-w-0"
+            >
+                <h2
+                    v-if="resultGroups.length > 1"
+                    class="mb-3 flex items-center gap-3 text-sm font-semibold text-muted-foreground"
+                >
+                    {{ group.label }}<span class="h-px flex-1 bg-border" />
+                </h2>
+                <div class="grid items-start gap-4 lg:grid-cols-2">
+                    <PersonResultCard
+                        v-for="result in group.results"
+                        :key="result.key"
+                        :result="result"
+                        :can-manage="canManage"
+                        :deleting="deleting === result.client.id"
+                        :deleting-person="deletingPerson"
+                        @edit="edit"
+                        @delete="remove"
+                        @add-person="editPerson"
+                        @edit-person="editPerson"
+                        @delete-person="removePerson"
+                    />
+                </div>
+            </section>
+        </div>
+        <div
+            v-else-if="clients?.data.length"
+            class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3"
+        >
             <ClientCard
                 v-for="client in clients.data"
                 :key="client.id"
                 :client="client"
                 :can-manage="canManage"
-                :matched-person-ids="matchedPersonIds"
                 :deleting="deleting === client.id"
                 :deleting-person="deletingPerson"
                 @edit="edit"
@@ -263,19 +394,34 @@ async function remove(client: Client): Promise<void> {
         </div>
         <div
             v-else
-            class="rounded-xl border border-dashed bg-white px-5 py-14 text-center text-muted-foreground"
+            class="rounded-xl border border-dashed bg-card px-5 py-14 text-center text-muted-foreground"
         >
-            <p>
-                {{
-                    searchLabel
-                        ? `No se encontraron resultados para "${searchLabel}".`
-                        : canManage
-                          ? 'Aún no hay clientes. Agrega el primero.'
-                          : 'Aún no hay clientes registrados.'
-                }}
+            <div
+                class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-brand-blue-soft text-blue-soft-foreground"
+            >
+                <ContactRound class="size-7" />
+            </div>
+            <p class="font-semibold text-foreground">
+                {{ emptyMessage }}
             </p>
+            <Link
+                v-if="filters.role !== 'todos'"
+                :href="
+                    index({
+                        query: filters.dni
+                            ? { dni: 1 }
+                            : filters.q
+                              ? { q: filters.q }
+                              : {},
+                    }).url
+                "
+                class="mt-3 inline-flex min-h-11 items-center text-link underline"
+                preserve-state
+                replace
+                >Buscar en todos</Link
+            >
             <Button
-                v-if="canManage && !searchLabel"
+                v-if="canManage && !searchLabel && filters.role === 'todos'"
                 variant="outline"
                 class="mt-4 min-h-11"
                 @click="edit(null)"
@@ -283,34 +429,34 @@ async function remove(client: Client): Promise<void> {
             >
         </div>
         <nav
-            v-if="clients.meta.last_page > 1"
+            v-if="pagination && pagination.meta.last_page > 1"
             aria-label="Paginación"
             class="flex flex-wrap items-center justify-center gap-3 text-sm"
         >
             <Button
                 variant="outline"
                 class="min-h-11"
-                :disabled="!clients.links.prev"
+                :disabled="!pagination!.links.prev"
                 as-child
                 ><Link
-                    v-if="clients.links.prev"
-                    :href="clients.links.prev"
+                    v-if="pagination!.links.prev"
+                    :href="pagination!.links.prev"
                     preserve-scroll
                     >Anterior</Link
                 ><span v-else>Anterior</span></Button
             >
             <span
-                >Página {{ clients.meta.current_page }} de
-                {{ clients.meta.last_page }}</span
+                >Página {{ pagination!.meta.current_page }} de
+                {{ pagination!.meta.last_page }}</span
             >
             <Button
                 variant="outline"
                 class="min-h-11"
-                :disabled="!clients.links.next"
+                :disabled="!pagination!.links.next"
                 as-child
                 ><Link
-                    v-if="clients.links.next"
-                    :href="clients.links.next"
+                    v-if="pagination!.links.next"
+                    :href="pagination!.links.next"
                     preserve-scroll
                     >Siguiente</Link
                 ><span v-else>Siguiente</span></Button

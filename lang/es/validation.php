@@ -163,7 +163,6 @@ return [
         'from' => 'fecha inicial',
         'to' => 'fecha final',
         'code' => 'código',
-        'can_manage_cards' => 'permiso de gestión',
         'full_name' => 'nombre completo',
         'dni' => 'identidad',
         'relationship' => 'parentesco',

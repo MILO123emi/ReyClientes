@@ -30,7 +30,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         Relation::enforceMorphMap(['client' => Client::class, 'person' => AuthorizedPerson::class, 'user' => User::class]);
-        Gate::define('manage-cards', fn (User $user): bool => $user->canManageCards());
+        Gate::define('manage-cards', fn (User $user): bool => $user->isOwner());
+        Gate::define('change-own-email', fn (User $user): bool => $user->isOwner());
         Gate::define('view-audit', fn (User $user): bool => $user->isOwner());
     }
 

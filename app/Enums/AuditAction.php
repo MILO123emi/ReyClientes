@@ -12,8 +12,10 @@ enum AuditAction: string
     case PersonDeleted = 'person.deleted';
     case UserCreated = 'user.created';
     case UserDeleted = 'user.deleted';
-    case UserPermissionChanged = 'user.permission_changed';
     case UserPasswordSetByOwner = 'user.password_set_by_owner';
+    case UserEmailChangeRequested = 'user.email_change_requested';
+    case UserEmailChangeFailed = 'user.email_change_failed';
+    case UserEmailChanged = 'user.email_changed';
     case AuthLogin = 'auth.login';
     case AuthLoginFailed = 'auth.login_failed';
     case AuthConfirmFailed = 'auth.confirm_failed';
@@ -32,8 +34,10 @@ enum AuditAction: string
             self::PersonDeleted => 'Persona autorizada eliminada',
             self::UserCreated => 'Usuario creado',
             self::UserDeleted => 'Usuario eliminado',
-            self::UserPermissionChanged => 'Permiso cambiado',
             self::UserPasswordSetByOwner => 'Contraseña asignada',
+            self::UserEmailChangeRequested => 'Código de cambio de correo enviado',
+            self::UserEmailChangeFailed => 'Código de cambio de correo incorrecto',
+            self::UserEmailChanged => 'Correo cambiado',
             self::AuthLogin => 'Inicio de sesión',
             self::AuthLoginFailed => 'Inicio de sesión fallido',
             self::AuthConfirmFailed => 'Confirmación de contraseña fallida',

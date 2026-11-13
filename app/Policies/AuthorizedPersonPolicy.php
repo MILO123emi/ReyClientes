@@ -19,16 +19,16 @@ class AuthorizedPersonPolicy
 
     public function create(User $user): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 
     public function update(User $user, AuthorizedPerson $person): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 
     public function delete(User $user, AuthorizedPerson $person): bool
     {
-        return $user->canManageCards();
+        return $user->isOwner();
     }
 }

@@ -10,7 +10,7 @@ class TestConfirmedMutationRequest extends ConfirmedRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->canManageCards() ?? false;
+        return $this->user()?->isOwner() ?? false;
     }
 
     /** @return array<string, array<mixed>> */
@@ -37,7 +37,7 @@ it('requires authentication before confirming an action', function () {
 });
 
 it('rejects missing empty and non-string passwords without counting failures', function (array $passwordInput) {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->post('/_tests/confirmed-mutation', [
         'name' => 'Nombre de Prueba',
@@ -56,7 +56,7 @@ it('rejects missing empty and non-string passwords without counting failures', f
 ]);
 
 it('counts incorrect passwords and audits failure without exposing the password', function () {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->post('/_tests/confirmed-mutation', [
         'current_password' => 'incorrect-secret', 'name' => 'Nombre de Prueba',
@@ -73,7 +73,7 @@ it('counts incorrect passwords and audits failure without exposing the password'
 
 it('returns 429 after five failures even for a correct password and permits retry after expiry', function () {
     $this->travelTo(now()->startOfSecond());
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $this->actingAs($user);
     for ($attempt = 0; $attempt < 5; $attempt++) {
         $this->post('/_tests/confirmed-mutation', [
@@ -95,7 +95,7 @@ it('returns 429 after five failures even for a correct password and permits retr
 });
 
 it('clears the limiter after a correct password without resetting cumulative session failures', function () {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $this->actingAs($user);
     for ($attempt = 0; $attempt < 3; $attempt++) {
         $this->post('/_tests/confirmed-mutation', [
@@ -114,7 +114,7 @@ it('clears the limiter after a correct password without resetting cumulative ses
 
 it('logs out and invalidates the session after ten cumulative failures', function () {
     $this->travelTo(now()->startOfSecond());
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $this->actingAs($user)->withSession(['_token' => 'initial-token']);
     for ($attempt = 0; $attempt < 9; $attempt++) {
         if ($attempt === 5) {
@@ -164,7 +164,7 @@ it('checks authorization before applying the confirmation throttle', function ()
 });
 
 it('confirms the password before validating other fields', function () {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->post('/_tests/confirmed-mutation', [
         'current_password' => 'incorrect-secret', 'name' => '',
@@ -175,7 +175,7 @@ it('confirms the password before validating other fields', function () {
 });
 
 it('validates other fields after a correct confirmation', function () {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
 
     $this->actingAs($user)->post('/_tests/confirmed-mutation', [
         'current_password' => 'password', 'name' => '',

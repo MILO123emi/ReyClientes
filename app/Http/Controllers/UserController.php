@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\Users\CreateUser;
 use App\Actions\Users\DeleteUser;
 use App\Actions\Users\SetUserPassword;
-use App\Actions\Users\UpdateUserPermission;
 use App\Http\Requests\Users\DestroyUserRequest;
 use App\Http\Requests\Users\SetUserPasswordRequest;
 use App\Http\Requests\Users\StoreUserRequest;
-use App\Http\Requests\Users\UpdateUserPermissionRequest;
 use App\Http\Resources\ManagedUserResource;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -26,16 +24,9 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request, CreateUser $action): RedirectResponse
     {
-        $action->handle($request->validated('name'), $request->validated('email'), $request->validated('password'), false, $request->boolean('can_manage_cards'), true);
+        $action->handle($request->validated('name'), $request->validated('email'), $request->validated('password'), false, true);
 
         return $this->done('Usuario creado');
-    }
-
-    public function updatePermission(UpdateUserPermissionRequest $request, User $user, UpdateUserPermission $action): RedirectResponse
-    {
-        $action->handle($user, $request->boolean('can_manage_cards'));
-
-        return $this->done('Permiso actualizado');
     }
 
     public function setPassword(SetUserPasswordRequest $request, User $user, SetUserPassword $action): RedirectResponse

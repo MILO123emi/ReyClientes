@@ -39,22 +39,53 @@ function choose(event: Event): void {
 
 <template>
     <div class="grid gap-3">
-        <div class="flex flex-wrap gap-2">
+        <div
+            class="relative flex aspect-[3/2] flex-wrap content-end justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed bg-muted p-4"
+        >
+            <img
+                v-if="preview"
+                :src="preview"
+                alt="Vista previa de la foto de la cédula"
+                class="absolute inset-0 size-full object-cover"
+            />
+            <div
+                v-else
+                class="flex w-full flex-col items-center justify-center gap-3 self-center py-6 text-muted-foreground"
+            >
+                <Camera class="size-9" /><span class="text-sm"
+                    >Tomar o elegir foto</span
+                >
+            </div>
+            <Button
+                v-if="model"
+                type="button"
+                variant="secondary"
+                size="icon"
+                class="absolute top-2 right-2 z-10 size-11"
+                aria-label="Quitar la foto elegida"
+                :disabled="disabled"
+                @click="model = null"
+                ><X
+            /></Button>
             <Button
                 type="button"
                 variant="outline"
-                class="min-h-11"
+                class="relative min-h-11 bg-card"
                 :disabled="disabled"
                 @click="camera?.click()"
-                ><Camera />Tomar foto</Button
+                ><Camera />{{
+                    preview ? 'Cambiar: cámara' : 'Tomar foto'
+                }}</Button
             >
             <Button
                 type="button"
                 variant="outline"
-                class="min-h-11"
+                class="relative min-h-11 bg-card"
                 :disabled="disabled"
                 @click="gallery?.click()"
-                ><ImagePlus />Elegir de galería</Button
+                ><ImagePlus />{{
+                    preview ? 'Cambiar: galería' : 'Galería'
+                }}</Button
             >
         </div>
         <input
@@ -76,25 +107,7 @@ function choose(event: Event): void {
             :disabled="disabled"
             @change="choose"
         />
-        <div v-if="preview" class="relative w-fit">
-            <img
-                :src="preview"
-                alt="Vista previa de la foto de la cédula"
-                class="max-h-44 rounded-md border object-contain"
-            />
-            <Button
-                v-if="model"
-                type="button"
-                variant="secondary"
-                size="icon"
-                class="absolute top-1 right-1 size-11"
-                aria-label="Quitar la foto elegida"
-                :disabled="disabled"
-                @click="model = null"
-                ><X
-            /></Button>
-        </div>
-        <p class="text-xs text-muted-foreground">
+        <p class="text-[13px] text-muted-foreground">
             JPG, PNG o WebP. Máximo 8 MB.
         </p>
         <InputError :message="error" />

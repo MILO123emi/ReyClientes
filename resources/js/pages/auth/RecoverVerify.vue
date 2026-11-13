@@ -122,7 +122,9 @@ function resendCode(): void {
             aria-live="off"
             class="text-center text-sm"
             :class="
-                remaining === 0 ? 'text-destructive' : 'text-muted-foreground'
+                remaining === 0
+                    ? 'text-destructive-soft-foreground'
+                    : 'text-muted-foreground'
             "
         >
             {{
@@ -153,7 +155,7 @@ function resendCode(): void {
                         :autocomplete="index === 0 ? 'one-time-code' : 'off'"
                         maxlength="1"
                         :aria-label="`Dígito ${index + 1} de 6`"
-                        class="h-12 min-w-0 rounded-md border bg-white text-center text-xl font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                        class="h-12 min-w-0 rounded-md border bg-card text-center text-xl font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         :disabled="form.processing || resend.processing"
                         :aria-invalid="Boolean(form.errors.code)"
                         @input="inputDigit($event, index)"
@@ -206,7 +208,7 @@ function resendCode(): void {
         >
         <Link
             :href="login()"
-            class="inline-flex min-h-11 items-center justify-center text-sm text-primary underline underline-offset-4"
+            class="inline-flex min-h-11 items-center justify-center text-sm text-link underline underline-offset-4"
             >Volver al inicio de sesión</Link
         >
     </div>

@@ -23,22 +23,20 @@ it('creates exactly one principal through the console', function () {
     $this->assertDatabaseCount('users', 1);
 });
 
-it('creates ordinary users with the chosen permission and a temporary password', function (bool $permission) {
+it('creates ordinary users with a temporary password', function () {
     $this->artisan('admin:create')
         ->expectsQuestion('Nombre', 'Usuario de Prueba')
         ->expectsQuestion('Correo electrónico', 'user@example.com')
         ->expectsQuestion('Contraseña', 'abcdefgh')
         ->expectsQuestion('Confirma la contraseña', 'abcdefgh')
-        ->expectsConfirmation('¿Puede agregar, editar y borrar clientes?', $permission ? 'yes' : 'no')
         ->doesntExpectOutputToContain('abcdefgh')
         ->assertSuccessful();
 
     $user = User::query()->sole();
     expect($user->isOwner())->toBeFalse()
-        ->and($user->can_manage_cards)->toBe($permission)
         ->and($user->must_change_password)->toBeTrue()
         ->and(Hash::check('abcdefgh', $user->password))->toBeTrue();
-})->with([true, false]);
+});
 
 it('normalizes the email before creation, login and password reset', function () {
     $this->artisan('admin:create', ['--owner' => true])

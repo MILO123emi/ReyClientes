@@ -18,7 +18,7 @@ defineProps<{
         <div
             class="relative hidden h-full flex-col bg-muted p-10 text-foreground lg:flex"
         >
-            <div class="absolute inset-0 bg-white" />
+            <div class="absolute inset-0 bg-card" />
             <Link
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"

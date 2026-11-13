@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { useMediaQuery } from "@vueuse/core"
+import { useAppearance } from "@/composables/useAppearance"
 import type { ToasterProps } from "vue-sonner"
 import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon, XIcon } from "@lucide/vue"
 import { Toaster as Sonner } from "vue-sonner"
@@ -7,6 +9,8 @@ import { cn } from "@/lib/utils"
 import 'vue-sonner/style.css';
 
 const props = defineProps<ToasterProps>()
+const mobile = useMediaQuery("(max-width: 639px)")
+const { dark } = useAppearance()
 </script>
 
 <template>
@@ -19,7 +23,9 @@ const props = defineProps<ToasterProps>()
       '--border-radius': 'var(--radius)',
     }"
     v-bind="props"
-    theme="light"
+    :theme="dark ? 'dark' : 'light'"
+    :position="mobile ? 'top-center' : 'bottom-right'"
+    rich-colors
     :close-button-aria-label="'Cerrar notificación'"
   >
     <template #success-icon>

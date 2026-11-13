@@ -7,6 +7,7 @@ use App\Enums\AuditAction;
 use App\Mail\PasswordResetCode as PasswordResetCodeMail;
 use App\Models\PasswordResetCode;
 use App\Models\User;
+use App\Support\MailTransport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +20,7 @@ class SendOwnerResetCode
 
     public function handle(string $email): void
     {
-        if (! app()->environment('local') && $this->usesLogTransport((string) config('mail.default'))) {
+        if (! app()->environment('local') && MailTransport::usesLog()) {
             throw new RuntimeException('El correo de recuperación no puede usar registros fuera del entorno local.');
         }
 
@@ -49,31 +50,5 @@ class SendOwnerResetCode
         // SMTP runs outside the transaction so a slow mail server never holds the SQLite write lock.
         Mail::to($issued['owner']->email)->send(new PasswordResetCodeMail($issued['code']));
         DB::transaction(fn () => $this->audit->handle(AuditAction::AuthResetCodeSent, 'Código de recuperación enviado a la cuenta principal', $issued['owner']));
-    }
-
-    /** @param list<string> $visited */
-    private function usesLogTransport(string $mailer, array $visited = []): bool
-    {
-        if (in_array($mailer, $visited, true)) {
-            return false;
-        }
-
-        $transport = config("mail.mailers.{$mailer}.transport");
-        if ($transport === 'log') {
-            return true;
-        }
-
-        if (in_array($transport, ['failover', 'roundrobin'], true)) {
-            $children = config("mail.mailers.{$mailer}.mailers", []);
-            if (is_array($children)) {
-                foreach ($children as $child) {
-                    if (is_string($child) && $this->usesLogTransport($child, [...$visited, $mailer])) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 }

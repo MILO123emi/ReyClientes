@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" @class(['dark' => request()->cookie('appearance') === 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-        <meta name="color-scheme" content="light">
-        <meta name="theme-color" content="#2552C3">
+        <meta name="color-scheme" content="light dark">
+        <meta name="theme-color" content="#0B1F4B">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
@@ -16,7 +16,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         <x-inertia::head>
-            <title>Super El Rey — Autorización de tarjeta</title>
+            <title>ReyPass — Super El Rey</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

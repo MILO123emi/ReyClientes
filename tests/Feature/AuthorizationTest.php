@@ -12,15 +12,13 @@ beforeEach(function () {
 });
 
 dataset('roles', [
-    'consulta' => ['reader', false, false],
-    'gestión' => ['manager', true, false],
-    'principal' => ['owner', true, true],
+    'empleado' => ['employee', false, false],
+    'administradora' => ['owner', true, true],
 ]);
 
 it('enforces permissions at the HTTP boundary', function (string $role, bool $cards, bool $administration) {
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
 
@@ -32,7 +30,6 @@ it('enforces permissions at the HTTP boundary', function (string $role, bool $ca
 it('shares only the required identity and permissions for each role', function (string $role, bool $cards, bool $administration) {
     $user = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
 
@@ -41,15 +38,15 @@ it('shares only the required identity and permissions for each role', function (
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'can' => ['manageCards' => $cards, 'manageUsers' => $administration, 'viewAudit' => $administration],
+            'can' => ['manageCards' => $cards, 'manageUsers' => $administration, 'viewAudit' => $administration, 'changeEmail' => $administration],
         ]));
 })->with('roles');
 
 it('applies permission revocation on the next request in the same session', function () {
-    $user = User::factory()->manager()->create();
+    $user = User::factory()->owner()->create();
     $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password']);
     $this->post('/_tests/cards')->assertOk();
-    User::query()->whereKey($user->id)->update(['can_manage_cards' => false]);
+    User::query()->whereKey($user->id)->update(['is_owner' => false]);
     $this->app['auth']->forgetGuards();
 
     $this->post('/_tests/cards')->assertForbidden();
@@ -63,7 +60,6 @@ it('requires authentication for every permission boundary', function (string $me
 it('allows only the principal to update or delete ordinary users', function (string $role, bool $cards, bool $administration) {
     $actor = match ($role) {
         'owner' => User::factory()->owner()->create(),
-        'manager' => User::factory()->manager()->create(),
         default => User::factory()->create(),
     };
     $subject = User::factory()->create();

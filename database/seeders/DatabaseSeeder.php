@@ -20,12 +20,11 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach ([
-            ['Administradora de Prueba', 'owner@example.com', true, false],
-            ['Gestor de Prueba', 'gestion@example.com', false, true],
-            ['Consulta de Prueba', 'consulta@example.com', false, false],
-        ] as [$name, $email, $isOwner, $canManageCards]) {
+            ['Administradora de Prueba', 'owner@example.com', true],
+            ['Empleado de Prueba', 'empleado@example.com', false],
+        ] as [$name, $email, $isOwner]) {
             if (! User::query()->where('email', $email)->exists()) {
-                $createUser->handle($name, $email, 'password', $isOwner, $canManageCards, mustChangePassword: false);
+                $createUser->handle($name, $email, 'password', $isOwner, mustChangePassword: false);
             }
         }
 

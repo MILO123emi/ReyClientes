@@ -68,7 +68,7 @@ function setOpen(value: boolean): void {
 <template>
     <Dialog :open="open" @update:open="setOpen">
         <DialogContent
-            class="max-h-dvh overflow-y-auto max-sm:h-dvh max-sm:max-w-none max-sm:rounded-none sm:max-h-[90dvh]"
+            class="form-dialog max-h-dvh overflow-y-auto max-sm:h-dvh max-sm:max-w-none max-sm:rounded-none sm:max-h-[90dvh] sm:rounded-2xl"
         >
             <DialogHeader
                 ><DialogTitle>Asignar contraseña</DialogTitle
@@ -78,7 +78,11 @@ function setOpen(value: boolean): void {
                     sesión.</DialogDescription
                 ></DialogHeader
             >
-            <form class="grid gap-5" @submit.prevent="submit">
+            <form
+                id="set-user-password-form"
+                class="flex flex-col gap-5"
+                @submit.prevent="submit"
+            >
                 <div class="grid gap-2">
                     <Label for="assigned-password">Contraseña temporal</Label
                     ><PasswordInput
@@ -101,26 +105,25 @@ function setOpen(value: boolean): void {
                         :message="form.errors.password_confirmation"
                     />
                 </div>
-                <DialogFooter
-                    ><Button
-                        type="button"
-                        variant="outline"
-                        class="min-h-11"
-                        :disabled="form.processing || confirming"
-                        @click="setOpen(false)"
-                        >Cancelar</Button
-                    ><Button
-                        type="submit"
-                        class="min-h-11"
-                        :disabled="form.processing || confirming"
-                        ><Spinner v-if="form.processing" />{{
-                            form.processing
-                                ? 'Guardando…'
-                                : 'Asignar contraseña'
-                        }}</Button
-                    ></DialogFooter
-                >
             </form>
+            <DialogFooter
+                ><Button
+                    type="button"
+                    variant="outline"
+                    class="min-h-11"
+                    :disabled="form.processing || confirming"
+                    @click="setOpen(false)"
+                    >Cancelar</Button
+                ><Button
+                    type="submit"
+                    form="set-user-password-form"
+                    class="min-h-11"
+                    :disabled="form.processing || confirming"
+                    ><Spinner v-if="form.processing" />{{
+                        form.processing ? 'Guardando…' : 'Guardar'
+                    }}</Button
+                ></DialogFooter
+            >
         </DialogContent>
     </Dialog>
 </template>

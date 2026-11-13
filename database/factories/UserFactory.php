@@ -31,7 +31,6 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'is_owner' => false,
-            'can_manage_cards' => false,
             'must_change_password' => false,
             'last_login_at' => null,
         ];
@@ -50,11 +49,6 @@ class UserFactory extends Factory
     public function owner(): static
     {
         return $this->state(fn (array $attributes) => ['is_owner' => true]);
-    }
-
-    public function manager(): static
-    {
-        return $this->state(fn (array $attributes) => ['can_manage_cards' => true]);
     }
 
     public function mustChangePassword(): static

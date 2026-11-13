@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                         'manageCards' => Gate::allows('manage-cards'),
                         'manageUsers' => $user->can('viewAny', User::class),
                         'viewAudit' => Gate::allows('view-audit'),
+                        'changeEmail' => Gate::allows('change-own-email'),
                     ],
                 ] : null,
             ],

@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 it('rejects creating an authorized person when the parent identity changed after validation', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create(['dni' => '0801199012345']);
     $staleClient = Client::query()->findOrFail($client->id);
     $data = ['full_name' => 'Persona de Prueba', 'dni' => '0101198554321', 'phone' => '99999999', 'relationship' => Relationship::Son];
@@ -32,7 +32,7 @@ it('rejects creating an authorized person when the parent identity changed after
 
 it('rejects updating an authorized person when the parent now has the submitted identity', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create(['dni' => '0801199012345']);
     $person = AuthorizedPerson::factory()->withIdPhoto()->for($client)->create(['dni' => '0301197056789']);
     $stalePerson = AuthorizedPerson::query()->findOrFail($person->id);
@@ -52,7 +52,7 @@ it('rejects updating an authorized person when the parent now has the submitted 
 
 it('rejects updating a client identity after a person with that identity was added', function () {
     Storage::fake('local');
-    $this->actingAs(User::factory()->manager()->create());
+    $this->actingAs(User::factory()->owner()->create());
     $client = Client::factory()->withIdPhoto()->create(['dni' => '0801199012345']);
     $staleClient = Client::query()->findOrFail($client->id);
     $data = ['dni' => '0101198554321'];
