@@ -59,6 +59,17 @@ class ClientController extends Controller
         ]);
     }
 
+    public function show(Client $client): Response
+    {
+        Gate::authorize('view', $client);
+        $client->load('authorizedPeople')->loadCount('authorizedPeople');
+
+        return Inertia::render('clients/Show', [
+            'client' => ClientResource::make($client),
+            'relationships' => Relationship::options(),
+        ]);
+    }
+
     public function search(SearchClientRequest $request): RedirectResponse
     {
         $dni = $request->validated('dni');
@@ -89,9 +100,10 @@ class ClientController extends Controller
 
     public function destroy(DeleteClientRequest $request, Client $client, DeleteClient $delete): RedirectResponse
     {
+        $cameFromDetail = parse_url(url()->previous(), PHP_URL_PATH) === route('clients.show', $client, false);
         $delete->handle($client);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente eliminado']);
 
-        return back();
+        return $cameFromDetail ? to_route('clients.index') : back();
     }
 }

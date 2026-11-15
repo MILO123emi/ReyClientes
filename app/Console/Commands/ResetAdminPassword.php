@@ -11,20 +11,34 @@ use Illuminate\Validation\Rules\Password;
 
 class ResetAdminPassword extends Command
 {
-    protected $signature = 'admin:reset-password {email : Correo electrónico del usuario}';
+    protected $signature = 'admin:reset-password
+        {email? : Correo electrónico del usuario}
+        {--owner : Cambiar la contraseña de la administradora principal sin escribir su correo}';
 
     protected $description = 'Asignar una contraseña y cerrar las sesiones del usuario';
 
     public function handle(SetUserPassword $setPassword): int
     {
-        $email = Str::lower(trim((string) $this->argument('email')));
-        $user = User::query()->where('email', $email)->first();
+        if ($this->option('owner')) {
+            $user = User::query()->where('is_owner', true)->first();
+        } else {
+            $email = Str::lower(trim((string) $this->argument('email')));
+            if ($email === '') {
+                $this->error('Escribe el correo del usuario o usa --owner para la administradora principal.');
+
+                return self::FAILURE;
+            }
+
+            $user = User::query()->where('email', $email)->first();
+        }
 
         if ($user === null) {
-            $this->error('No existe un usuario con ese correo electrónico.');
+            $this->error($this->option('owner') ? 'No existe una administradora principal.' : 'No existe un usuario con ese correo electrónico.');
 
             return self::FAILURE;
         }
+
+        $this->line("Usuario: {$user->name} ({$user->email})");
 
         $password = (string) $this->secret('Nueva contraseña', fallback: false);
         $confirmation = (string) $this->secret('Confirma la contraseña', fallback: false);

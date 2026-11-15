@@ -124,7 +124,7 @@ it('rejects invalid client fields with the specified Spanish validation message'
     'seven phone digits' => ['short-phone', 'phone', 'El teléfono debe tener 8 dígitos y empezar con 2 a 9.'],
     'phone starts with 1' => ['low-phone', 'phone', 'El teléfono debe tener 8 dígitos y empezar con 2 a 9.'],
     'name with numbers' => ['invalid-name', 'full_name', 'El nombre solo puede tener letras, espacios, apóstrofos y guiones.'],
-    'PDF photo' => ['pdf', 'id_photo', 'El campo foto de la cédula debe ser una imagen.'],
+    'PDF photo' => ['pdf', 'id_photo', 'La foto de la cédula debe ser una imagen JPG, PNG, WebP, GIF, BMP o AVIF.'],
     'photo above 8 MB' => ['oversize', 'id_photo', 'El campo foto de la cédula no debe ser mayor que 8192 kilobytes.'],
 ]);
 

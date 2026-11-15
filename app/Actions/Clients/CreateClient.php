@@ -7,10 +7,12 @@ use App\Enums\AuditAction;
 use App\Enums\PhotoOwner;
 use App\Models\Client;
 use App\Services\IdPhotoService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class CreateClient
@@ -31,6 +33,11 @@ class CreateClient
 
                 return $client;
             });
+        } catch (UniqueConstraintViolationException) {
+            // Two identical submissions raced past validation: answer like the validator would.
+            $this->photos->delete(...array_values($paths));
+
+            throw ValidationException::withMessages(['dni' => 'Ya existe un cliente con esta identidad.']);
         } catch (Throwable $exception) {
             $this->photos->delete(...array_values($paths));
             throw $exception;

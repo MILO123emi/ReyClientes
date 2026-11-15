@@ -27,8 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:viewAny,'.User::class)->group(function () {
         Route::get('usuarios', [UserController::class, 'index'])->name('users.index');
         Route::post('usuarios', [UserController::class, 'store'])->name('users.store');
-        Route::put('usuarios/{user}/contrasena', [UserController::class, 'setPassword'])->name('users.password');
-        Route::delete('usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::put('usuarios/{user}/contrasena', [UserController::class, 'setPassword'])->whereNumber('user')->name('users.password');
+        Route::delete('usuarios/{user}', [UserController::class, 'destroy'])->whereNumber('user')->name('users.destroy');
     });
     Route::middleware('can:change-own-email')->group(function () {
         Route::get('mi-cuenta/correo', [OwnerEmailController::class, 'edit'])->name('account.email');
@@ -42,11 +42,12 @@ Route::middleware('auth')->group(function () {
     Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
     Route::post('clientes', [ClientController::class, 'store'])->name('clients.store');
     Route::post('clientes/buscar', [ClientController::class, 'search'])->middleware('throttle:30,1')->name('clients.search');
-    Route::put('clientes/{client}', [ClientController::class, 'update'])->name('clients.update');
-    Route::delete('clientes/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
-    Route::post('clientes/{client}/autorizados', [AuthorizedPersonController::class, 'store'])->name('people.store');
-    Route::put('autorizados/{person}', [AuthorizedPersonController::class, 'update'])->name('people.update');
-    Route::delete('autorizados/{person}', [AuthorizedPersonController::class, 'destroy'])->name('people.destroy');
+    Route::get('clientes/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
+    Route::put('clientes/{client}', [ClientController::class, 'update'])->whereNumber('client')->name('clients.update');
+    Route::delete('clientes/{client}', [ClientController::class, 'destroy'])->whereNumber('client')->name('clients.destroy');
+    Route::post('clientes/{client}/autorizados', [AuthorizedPersonController::class, 'store'])->whereNumber('client')->name('people.store');
+    Route::put('autorizados/{person}', [AuthorizedPersonController::class, 'update'])->whereNumber('person')->name('people.update');
+    Route::delete('autorizados/{person}', [AuthorizedPersonController::class, 'destroy'])->whereNumber('person')->name('people.destroy');
     Route::redirect('settings/password', '/cambiar-contrasena');
     Route::get('cambiar-contrasena', [ForcedPasswordChangeController::class, 'edit'])->name('password.change');
     Route::put('cambiar-contrasena', [ForcedPasswordChangeController::class, 'update'])

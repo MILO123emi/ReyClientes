@@ -47,4 +47,9 @@ class AuthorizedPersonFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->placeholderIdPhoto(PhotoOwner::Person), PhotoOwner::Person));
     }
+
+    public function withAvatarPhoto(): static
+    {
+        return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->avatarIdPhoto(PhotoOwner::Person), PhotoOwner::Person));
+    }
 }

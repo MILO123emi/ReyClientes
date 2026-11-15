@@ -27,8 +27,10 @@ class SendTestMail extends Command
 
         try {
             Mail::to($email)->send(new TestMail);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
             $this->error('No se pudo enviar el correo de prueba. Revisa la configuración del correo.');
+            // Con -v se ve el motivo exacto (útil al configurar el servidor).
+            $this->line($exception->getMessage(), verbosity: 'v');
 
             return self::FAILURE;
         }

@@ -33,4 +33,9 @@ class ClientFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->placeholderIdPhoto(PhotoOwner::Client), PhotoOwner::Client));
     }
+
+    public function withAvatarPhoto(): static
+    {
+        return $this->state(fn (array $attributes): array => app(IdPhotoService::class)->store($this->avatarIdPhoto(PhotoOwner::Client), PhotoOwner::Client));
+    }
 }

@@ -7,7 +7,9 @@ import {
     EllipsisVertical,
     IdCard,
     Phone,
+    Maximize2,
 } from '@lucide/vue';
+import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import RoleBadge from '@/components/RoleBadge.vue';
 import IdPhotoViewer from '@/components/IdPhotoViewer.vue';
@@ -26,6 +28,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { show } from '@/routes/clients';
 import type { AuthorizedPerson, Client } from '@/types/cards';
 
 defineProps<{
@@ -51,12 +54,16 @@ const expanded = ref(false);
         <RoleBadge role="owner" class="mb-3" />
         <div class="relative flex items-start gap-3">
             <IdPhotoViewer :photo="client.photo" :name="client.full_name" />
-            <div class="min-w-0 flex-1">
+            <div class="relative min-w-0 flex-1">
                 <h2
                     :class="canManage ? 'pr-6' : ''"
                     class="line-clamp-2 text-lg leading-snug font-semibold break-words"
                 >
-                    {{ client.full_name }}
+                    <Link
+                        :href="show(client.id).url"
+                        class="rounded-sm after:absolute after:inset-0 hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                        >{{ client.full_name }}</Link
+                    >
                 </h2>
                 <div
                     class="mt-2 grid gap-1.5 text-[15px] text-muted-foreground"
@@ -68,7 +75,7 @@ const expanded = ref(false);
                     </p>
                     <a
                         :href="`tel:${client.phone}`"
-                        class="flex min-h-11 items-center gap-1.5 tabular-nums"
+                        class="relative z-10 flex min-h-11 w-fit items-center gap-1.5 tabular-nums"
                         ><Phone class="size-4 shrink-0" />{{ client.phone }}</a
                     >
                 </div>
@@ -104,7 +111,15 @@ const expanded = ref(false);
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
-        <Collapsible v-model:open="expanded" class="mt-3">
+        <Button
+            variant="outline"
+            class="mt-3 min-h-11 w-full border-primary text-[15px] text-link dark:bg-transparent"
+            as-child
+            ><Link :href="show(client.id).url"
+                ><Maximize2 class="shrink-0" />Ver en grande</Link
+            ></Button
+        >
+        <Collapsible v-model:open="expanded" class="mt-2">
             <CollapsibleTrigger as-child
                 ><Button
                     variant="ghost"

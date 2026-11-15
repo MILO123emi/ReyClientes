@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ChevronDown, IdCard, Phone } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { ChevronRight, IdCard, Phone } from '@lucide/vue';
 import ClientCard from '@/components/ClientCard.vue';
 import IdPhotoViewer from '@/components/IdPhotoViewer.vue';
 import RoleBadge from '@/components/RoleBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { show } from '@/routes/clients';
 import type { AuthorizedPerson, Client, SearchResult } from '@/types/cards';
 
-const props = defineProps<{
+defineProps<{
     result: SearchResult;
     canManage: boolean;
     deleting?: boolean;
@@ -21,13 +22,6 @@ defineEmits<{
     editPerson: [client: Client, person: AuthorizedPerson];
     deletePerson: [person: AuthorizedPerson];
 }>();
-const expanded = ref(false);
-watch(
-    () => props.result.key,
-    () => {
-        expanded.value = false;
-    },
-);
 </script>
 
 <template>
@@ -108,32 +102,18 @@ watch(
             </div>
             <Button
                 variant="outline"
-                class="mt-3 min-h-11 w-full justify-between gap-2 whitespace-normal"
-                :aria-expanded="expanded"
-                :aria-controls="`owner-card-${result.key}`"
-                @click="expanded = !expanded"
-            >
-                Ver tarjeta de {{ result.client.full_name.split(' ')[0] }}
-                <ChevronDown
-                    class="size-4 shrink-0 transition-transform"
-                    :class="expanded ? 'rotate-180' : ''"
-                />
-            </Button>
-            <div v-if="expanded" :id="`owner-card-${result.key}`" class="mt-3">
-                <ClientCard
-                    :client="result.client"
-                    :can-manage="canManage"
-                    :deleting="deleting"
-                    :deleting-person="deletingPerson"
-                    @edit="$emit('edit', $event)"
-                    @delete="$emit('delete', $event)"
-                    @add-person="$emit('addPerson', $event)"
-                    @edit-person="
-                        (client, person) => $emit('editPerson', client, person)
+                class="mt-3 min-h-11 w-full justify-between gap-2 border-primary whitespace-normal text-link dark:bg-transparent"
+                as-child
+                ><Link
+                    :href="
+                        show(result.client.id, {
+                            query: { persona: result.person.id },
+                        }).url
                     "
-                    @delete-person="$emit('deletePerson', $event)"
-                />
-            </div>
+                    >Ver en grande la tarjeta de
+                    {{ result.client.full_name.split(' ')[0] }}
+                    <ChevronRight class="size-4 shrink-0" /></Link
+            ></Button>
         </article>
     </div>
 </template>

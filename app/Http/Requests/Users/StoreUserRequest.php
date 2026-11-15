@@ -28,6 +28,6 @@ class StoreUserRequest extends ConfirmedRequest
     /** @return array<string, array<mixed>> */
     public function rules(): array
     {
-        return [...$this->confirmationRules(), ...['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'string', 'email', 'unique:users,email'], 'password' => $this->passwordRules()]];
+        return [...$this->confirmationRules(), ...['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'], 'password' => $this->passwordRules()]];
     }
 }

@@ -10,6 +10,7 @@ use App\Models\AuthorizedPerson;
 use App\Models\Client;
 use App\Services\IdPhotoService;
 use App\Support\Dni;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +63,11 @@ class UpdateAuthorizedPerson
 
                 return $person;
             });
+        } catch (UniqueConstraintViolationException) {
+            // Two identical submissions raced past validation: answer like the validator would.
+            $this->photos->delete(...array_values($paths));
+
+            throw ValidationException::withMessages(['dni' => 'Esta persona ya está autorizada por este cliente.']);
         } catch (Throwable $exception) {
             $this->photos->delete(...array_values($paths));
             throw $exception;

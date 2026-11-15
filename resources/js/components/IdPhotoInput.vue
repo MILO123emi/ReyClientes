@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, ImagePlus, X } from '@lucide/vue';
+import { ImagePlus, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/InputError.vue';
@@ -7,8 +7,8 @@ import InputError from '@/components/InputError.vue';
 const model = defineModel<File | null>({ required: true });
 const props = defineProps<{ currentPhoto?: string; disabled?: boolean }>();
 const emit = defineEmits<{ error: [message: string] }>();
-const camera = ref<HTMLInputElement | null>(null);
 const gallery = ref<HTMLInputElement | null>(null);
+const supported = /\.(jpe?g|png|webp|gif|bmp|avif)$/i;
 const previewUrl = ref('');
 const error = ref('');
 const preview = computed(() => previewUrl.value || props.currentPhoto);
@@ -26,8 +26,16 @@ function choose(event: Event): void {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-        error.value = 'La foto no puede pesar más de 8 MB.';
+    const problem = /\.(heic|heif)$/i.test(file.name)
+        ? 'Las fotos HEIC del iPhone no se pueden leer. Envíala o guárdala como JPG.'
+        : !supported.test(file.name) ||
+            (file.type !== '' && !file.type.startsWith('image/'))
+          ? 'Ese archivo no es una foto. Elige una imagen JPG o PNG.'
+          : file.size > 8 * 1024 * 1024
+            ? 'La foto no puede pesar más de 8 MB.'
+            : '';
+    if (problem) {
+        error.value = problem;
         emit('error', error.value);
         return;
     }
@@ -52,8 +60,8 @@ function choose(event: Event): void {
                 v-else
                 class="flex w-full flex-col items-center justify-center gap-3 self-center py-6 text-muted-foreground"
             >
-                <Camera class="size-9" /><span class="text-sm"
-                    >Tomar o elegir foto</span
+                <ImagePlus class="size-9" /><span class="text-sm"
+                    >Elige la foto de la cédula</span
                 >
             </div>
             <Button
@@ -72,32 +80,12 @@ function choose(event: Event): void {
                 variant="outline"
                 class="relative min-h-11 bg-card"
                 :disabled="disabled"
-                @click="camera?.click()"
-                ><Camera />{{
-                    preview ? 'Cambiar: cámara' : 'Tomar foto'
-                }}</Button
-            >
-            <Button
-                type="button"
-                variant="outline"
-                class="relative min-h-11 bg-card"
-                :disabled="disabled"
                 @click="gallery?.click()"
                 ><ImagePlus />{{
-                    preview ? 'Cambiar: galería' : 'Galería'
+                    preview ? 'Cambiar foto' : 'Elegir foto'
                 }}</Button
             >
         </div>
-        <input
-            ref="camera"
-            type="file"
-            accept="image/*"
-            capture="environment"
-            class="hidden"
-            aria-label="Tomar foto de la cédula"
-            :disabled="disabled"
-            @change="choose"
-        />
         <input
             ref="gallery"
             type="file"
@@ -108,7 +96,7 @@ function choose(event: Event): void {
             @change="choose"
         />
         <p class="text-[13px] text-muted-foreground">
-            JPG, PNG o WebP. Máximo 8 MB.
+            Sirve cualquier foto: JPG, PNG, WebP, GIF, BMP o AVIF. Máximo 8 MB.
         </p>
         <InputError :message="error" />
     </div>

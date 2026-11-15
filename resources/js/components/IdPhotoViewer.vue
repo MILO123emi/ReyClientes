@@ -10,7 +10,12 @@ import {
 } from '@/components/ui/dialog';
 import type { PhotoUrls } from '@/types/cards';
 
-defineProps<{ photo: PhotoUrls; name: string; compact?: boolean }>();
+defineProps<{
+    photo: PhotoUrls;
+    name: string;
+    compact?: boolean;
+    large?: boolean;
+}>();
 const open = ref(false);
 const zoom = ref(1);
 const pointers = new Map<number, { x: number; y: number }>();
@@ -61,17 +66,20 @@ function pointerUp(event: PointerEvent): void {
         <button
             type="button"
             class="relative shrink-0 overflow-hidden rounded-xl border bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+            :class="large ? 'block w-full' : ''"
             :aria-label="`Ver foto de la cédula de ${name}`"
             @click="open = true"
         >
             <img
-                :src="photo.thumb"
+                :src="large ? photo.full : photo.thumb"
                 :alt="`Foto de la cédula de ${name}`"
                 loading="lazy"
                 :class="
-                    compact
-                        ? 'h-11 w-16 object-cover'
-                        : 'aspect-[3/2] w-28 object-cover'
+                    large
+                        ? 'aspect-[3/2] w-full object-cover'
+                        : compact
+                          ? 'h-11 w-16 object-cover'
+                          : 'aspect-[3/2] w-28 object-cover'
                 "
             />
             <Maximize2

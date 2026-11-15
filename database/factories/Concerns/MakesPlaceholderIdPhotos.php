@@ -6,6 +6,20 @@ use App\Enums\PhotoOwner;
 
 trait MakesPlaceholderIdPhotos
 {
+    /** Development-only cartoon avatar (960x640 PNG); falls back to the fictional ID card. */
+    protected function avatarIdPhoto(PhotoOwner $owner): string
+    {
+        $paths = glob(database_path('seeders/assets/avatars/avatar-*.png')) ?: [];
+        if ($paths !== []) {
+            $contents = file_get_contents(fake()->randomElement($paths));
+            if ($contents !== false) {
+                return $contents;
+            }
+        }
+
+        return $this->placeholderIdPhoto($owner);
+    }
+
     protected function placeholderIdPhoto(?PhotoOwner $owner = null): string
     {
         if ($owner !== null) {

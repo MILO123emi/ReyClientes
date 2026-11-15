@@ -158,6 +158,11 @@ return [
     'uppercase' => 'El campo :attribute debe estar en mayúscula.',
     'url' => 'El campo :attribute debe ser una URL válida.',
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
+    'custom' => [
+        'id_photo' => [
+            'mimes' => 'La foto de la cédula debe ser una imagen JPG, PNG, WebP, GIF, BMP o AVIF.',
+        ],
+    ],
     'attributes' => [
         'action' => 'acción',
         'from' => 'fecha inicial',

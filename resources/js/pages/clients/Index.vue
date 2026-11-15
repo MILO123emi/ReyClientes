@@ -13,11 +13,9 @@ import AuthorizedPersonFormDialog from '@/components/AuthorizedPersonFormDialog.
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { submitWithPassword } from '@/lib/submitWithPassword';
-import { destroy, index, search } from '@/routes/clients';
-import { destroy as destroyPerson } from '@/routes/people';
+import { useClientActions } from '@/composables/useClientActions';
+import { index, search } from '@/routes/clients';
 import type {
-    AuthorizedPerson,
     Client,
     ClientFilters,
     Paginated,
@@ -70,13 +68,19 @@ const emptyMessage = computed(() => {
 });
 const page = usePage();
 const canManage = computed(() => page.props.auth.user.can.manageCards);
-const formOpen = ref(false);
-const editing = ref<Client | null>(null);
-const deleting = ref<number | null>(null);
-const personFormOpen = ref(false);
-const personClient = ref<Client | null>(null);
-const editingPerson = ref<AuthorizedPerson | null>(null);
-const deletingPerson = ref<number | null>(null);
+const {
+    formOpen,
+    editing,
+    deleting,
+    personFormOpen,
+    personClient,
+    editingPerson,
+    deletingPerson,
+    edit,
+    editPerson,
+    removePerson,
+    remove,
+} = useClientActions();
 const query = ref(props.filters.q);
 const searching = ref(false);
 const searchError = ref('');
@@ -204,65 +208,6 @@ onBeforeUnmount(() => {
     clearTimeout(timer);
     cancelSearch?.();
 });
-
-function edit(client: Client | null): void {
-    editing.value = client;
-    formOpen.value = true;
-}
-
-function editPerson(
-    client: Client,
-    person: AuthorizedPerson | null = null,
-): void {
-    personClient.value = client;
-    editingPerson.value = person;
-    personFormOpen.value = true;
-}
-
-async function removePerson(person: AuthorizedPerson): Promise<void> {
-    if (deletingPerson.value !== null) return;
-    deletingPerson.value = person.id;
-    try {
-        await submitWithPassword(
-            'Confirma la eliminación de la persona autorizada',
-            (password, callbacks) => {
-                router.delete(destroyPerson.url(person.id), {
-                    ...callbacks,
-                    data: { current_password: password },
-                    preserveScroll: true,
-                });
-            },
-            {
-                destructive: true,
-                description: `Vas a eliminar a ${person.full_name}. Esta acción no se puede deshacer.`,
-            },
-        );
-    } finally {
-        deletingPerson.value = null;
-    }
-}
-async function remove(client: Client): Promise<void> {
-    if (deleting.value !== null) return;
-    deleting.value = client.id;
-    try {
-        await submitWithPassword(
-            'Confirma la eliminación del cliente',
-            (password, callbacks) => {
-                router.delete(destroy.url(client.id), {
-                    ...callbacks,
-                    data: { current_password: password },
-                    preserveScroll: true,
-                });
-            },
-            {
-                destructive: true,
-                description: `Vas a eliminar a ${client.full_name} y sus ${client.people_count} personas autorizadas. Esta acción no se puede deshacer.`,
-            },
-        );
-    } finally {
-        deleting.value = null;
-    }
-}
 </script>
 
 <template>

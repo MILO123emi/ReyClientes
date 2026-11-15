@@ -132,3 +132,30 @@ it('reports a missing user without asking for secrets', function () {
     $this->artisan('admin:reset-password', ['email' => 'missing@example.com'])
         ->expectsOutput('No existe un usuario con ese correo electrónico.')->assertFailed();
 });
+
+it('resets the principal password with --owner without knowing her email', function () {
+    $owner = User::factory()->owner()->create();
+    $employee = User::factory()->create();
+    $employeeHash = $employee->password;
+    DB::table('sessions')->insert(['id' => 'owner-session', 'user_id' => $owner->id, 'payload' => '', 'last_activity' => time()]);
+
+    $this->artisan('admin:reset-password', ['--owner' => true])
+        ->expectsOutputToContain($owner->email)
+        ->expectsQuestion('Nueva contraseña', 'abcdefgh')
+        ->expectsQuestion('Confirma la contraseña', 'abcdefgh')
+        ->assertSuccessful();
+
+    expect(Hash::check('abcdefgh', $owner->refresh()->password))->toBeTrue()
+        ->and($owner->must_change_password)->toBeFalse()
+        ->and($employee->refresh()->password)->toBe($employeeHash);
+    $this->assertDatabaseMissing('sessions', ['user_id' => $owner->id]);
+});
+
+it('fails with --owner when there is no principal and without email or --owner', function () {
+    User::factory()->create();
+
+    $this->artisan('admin:reset-password', ['--owner' => true])
+        ->expectsOutput('No existe una administradora principal.')->assertFailed();
+    $this->artisan('admin:reset-password')
+        ->expectsOutput('Escribe el correo del usuario o usa --owner para la administradora principal.')->assertFailed();
+});
